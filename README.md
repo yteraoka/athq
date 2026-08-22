@@ -107,6 +107,11 @@ The catalog is read with the metadata API, so browsing it runs no query and
 costs nothing. The result pane shows the first `--max-rows` rows (100 by
 default, `0` for all); saving always writes every row.
 
+When a query fails, the whole message goes into the result pane, wrapped and
+scrollable, together with the execution id — the status line at the bottom has
+room for its first line only. The same message can be printed again later with
+`athq q --id <execution id>`.
+
 ### Work groups, databases and tables
 
 ```sh

@@ -68,6 +68,7 @@ type tuiModel struct {
 
 	qe      *types.QueryExecution
 	result  *resultTable
+	errText string
 	maxRows int
 
 	running   bool
@@ -188,11 +189,10 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cancelRun = nil
 		if msg.err != nil {
 			m.result, m.qe = nil, msg.qe
-			m.resultVP.SetContent("")
-			return m.fail(msg.err), nil
+			return m.showError(msg.err, msg.qe), nil
 		}
-		m.qe, m.result = msg.qe, msg.result
-		m.resultVP.SetContent(renderResultContent(msg.result))
+		m.qe, m.result, m.errText = msg.qe, msg.result, ""
+		m.refreshResultPane()
 		m.resultVP.SetYOffset(0)
 		m.resultVP.SetXOffset(0)
 		m.status = queryStatsLine(msg.qe, msg.result)
@@ -220,6 +220,76 @@ func (m tuiModel) fail(err error) tuiModel {
 	m.status = err.Error()
 	m.statusErr = true
 	return m
+}
+
+// showError puts the whole message in the result pane. Athena's reasons run
+// well past one line, and the status bar can only ever show their beginning.
+func (m tuiModel) showError(err error, qe *types.QueryExecution) tuiModel {
+	m.errText = errorDetail(err, qe)
+	m.refreshResultPane()
+	m.resultVP.SetYOffset(0)
+	m.resultVP.SetXOffset(0)
+	m.focus = paneResult
+	m.editor.Blur()
+	return m.fail(err)
+}
+
+// errorDetail is the text of the error plus the execution id, which is what
+// the console and the AWS support need to look the failure up. There is no id
+// when the query never started.
+func errorDetail(err error, qe *types.QueryExecution) string {
+	text := err.Error()
+	if qe == nil {
+		return text
+	}
+	if id := aws.ToString(qe.QueryExecutionId); id != "" {
+		text += "\n\nexecution id: " + id
+	}
+	return text
+}
+
+// refreshResultPane fills the viewport with the error, or with the result when
+// there is none. It runs again on a resize so the text is rewrapped.
+func (m *tuiModel) refreshResultPane() {
+	if m.errText != "" {
+		m.resultVP.SetContent(styleTUIError.Render(wrapText(m.errText, m.resultVP.Width())))
+		return
+	}
+	m.resultVP.SetContent(renderResultContent(m.result))
+}
+
+// wrapText breaks s to fit width cells. A word longer than the line is split
+// rather than left hanging off the edge.
+func wrapText(s string, width int) string {
+	if width <= 0 {
+		return s
+	}
+	var out []string
+	for _, paragraph := range strings.Split(s, "\n") {
+		line := ""
+		for _, word := range strings.Fields(paragraph) {
+			for tuiWidth.StringWidth(word) > width {
+				head := tuiWidth.Truncate(word, width, "")
+				if line != "" {
+					out = append(out, line)
+					line = ""
+				}
+				out = append(out, head)
+				word = word[len(head):]
+			}
+			switch {
+			case line == "":
+				line = word
+			case tuiWidth.StringWidth(line)+1+tuiWidth.StringWidth(word) <= width:
+				line += " " + word
+			default:
+				out = append(out, line)
+				line = word
+			}
+		}
+		out = append(out, line)
+	}
+	return strings.Join(out, "\n")
 }
 
 func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
@@ -429,6 +499,7 @@ func (m tuiModel) startQuery() (tea.Model, tea.Cmd) {
 	ctx, cancel := context.WithCancel(m.ctx)
 	m.cancelRun = cancel
 	m.running = true
+	m.errText = ""
 	m.runStart = time.Now()
 	m.status = ""
 	m.statusErr = false

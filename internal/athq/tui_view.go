@@ -46,6 +46,7 @@ func (m *tuiModel) layout() {
 	m.editor.SetHeight(m.editHeight - 3)
 	m.resultVP.SetWidth(m.width - 2)
 	m.resultVP.SetHeight(m.resHeight - 3)
+	m.refreshResultPane()
 	m.saveIn.SetWidth(m.width - 12)
 
 	m.catOffset = scrollOffset(m.catCursor, m.catOffset, m.catalogVisibleRows())
@@ -194,6 +195,9 @@ func (m tuiModel) columnsContent() string {
 }
 
 func (m tuiModel) resultTitle() string {
+	if m.errText != "" {
+		return "error"
+	}
 	if m.result == nil {
 		return "result"
 	}

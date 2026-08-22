@@ -292,6 +292,72 @@ func TestQueryFailureIsShownInTheStatus(t *testing.T) {
 	}
 }
 
+func TestQueryFailureShowsTheWholeMessageInTheResultPane(t *testing.T) {
+	m := loadedTUI(t)
+	m.running = true
+
+	long := errors.New("COLUMN_NOT_FOUND: line 1:8: Column 'nosuchcolumn' cannot be " +
+		"resolved or requester is not authorized to access requested resources")
+	qe := &types.QueryExecution{QueryExecutionId: aws.String("abc-123")}
+
+	next, _ := m.Update(msgTUIQueryDone{qe: qe, err: long})
+	m = next.(tuiModel)
+
+	if m.focus != paneResult {
+		t.Errorf("focus: got = %v, want the result pane so the text can be scrolled", m.focus)
+	}
+	content := stripANSI(m.View().Content)
+	// The status line can only hold the beginning, so every word has to be
+	// readable in the pane instead.
+	for _, word := range strings.Fields(long.Error()) {
+		if !strings.Contains(content, word) {
+			t.Errorf("the view is missing %q of the error message", word)
+		}
+	}
+	if !strings.Contains(content, "abc-123") {
+		t.Error("the view does not show the execution id")
+	}
+	if !strings.Contains(content, "error") {
+		t.Error("the result pane is not titled as an error")
+	}
+}
+
+func TestARunClearsThePreviousError(t *testing.T) {
+	m := loadedTUI(t)
+	m.errText = "an old failure"
+	m.editor.SetValue("SELECT 1")
+
+	next, _ := m.startQuery()
+	if got := next.(tuiModel).errText; got != "" {
+		t.Errorf("got = %q, want the error cleared when a new query starts", got)
+	}
+}
+
+func TestErrorDetailWithoutAnExecution(t *testing.T) {
+	if got := errorDetail(errTest, nil); got != errTest.Error() {
+		t.Errorf("got = %q, want just the message", got)
+	}
+}
+
+func TestWrapTextBreaksWordsLongerThanTheLine(t *testing.T) {
+	got := wrapText("short "+strings.Repeat("x", 25)+" tail", 10)
+	for _, line := range strings.Split(got, "\n") {
+		if w := tuiWidth.StringWidth(line); w > 10 {
+			t.Errorf("line %q is %d wide, want at most 10", line, w)
+		}
+	}
+	if strings.Count(strings.ReplaceAll(got, "\n", ""), "x") != 25 {
+		t.Errorf("got = %q, want every character kept", got)
+	}
+}
+
+func TestWrapTextKeepsParagraphs(t *testing.T) {
+	got := wrapText("one\n\ntwo", 20)
+	if got != "one\n\ntwo" {
+		t.Errorf("got = %q, want the blank line kept", got)
+	}
+}
+
 func TestTruncatePadFitsExactly(t *testing.T) {
 	if got := truncatePad("ab", 5); got != "ab   " {
 		t.Errorf("padding: got = %q, want %q", got, "ab   ")
