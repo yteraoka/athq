@@ -1,0 +1,58 @@
+name: GoReleaser
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Extract Go version
+        id: go-version
+        run: echo "version=$(grep 'go = ' mise.toml | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: ${{ steps.go-version.outputs.version }}
+          cache: true
+
+      - name: Run GoReleaser build check (Pull Request)
+        if: github.event_name == 'pull_request'
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          version: v2
+          args: build --snapshot --clean
+
+      # GitHub App から一時的なトークンを生成
+      - name: Generate Token
+        if: startsWith(github.ref, 'refs/tags/')
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.HOMEBREW_APP_ID }}
+          private-key: ${{ secrets.HOMEBREW_APP_PRIVATE_KEY }}
+          # 自分のリポジトリと Tap リポジトリの両方に権限を絞る（任意）
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            athq
+            homebrew-cask
+
+      - name: Run GoReleaser release (Tag Push)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          version: v2
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
