@@ -368,9 +368,14 @@ func renderTable(w io.Writer, headers []string, rows [][]string, rightAlign []bo
 			}
 		}
 	}
-	for i := range widths {
-		if widths[i] > maxColumnWidth {
-			widths[i] = maxColumnWidth
+	// A hard cap would cut identifiers that the reader needs in full, so it
+	// only applies when the width to fit is unknown; otherwise the columns are
+	// shrunk just enough to fit the screen.
+	if maxWidth <= 0 {
+		for i := range widths {
+			if widths[i] > maxColumnWidth {
+				widths[i] = maxColumnWidth
+			}
 		}
 	}
 	shrinkToWidth(widths, maxWidth)

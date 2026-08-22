@@ -250,3 +250,27 @@ func TestSanitizeCellFoldsNewlines(t *testing.T) {
 		t.Errorf("got = %q, want %q", got, "a b c")
 	}
 }
+
+func TestRenderTableKeepsLongCellsWhenTheWidthAllows(t *testing.T) {
+	long := strings.Repeat("x", 76)
+	var buf bytes.Buffer
+	if err := renderTable(&buf, []string{"NAME"}, [][]string{{long}}, nil, 200); err != nil {
+		t.Fatalf("got error %v, want none", err)
+	}
+	if !strings.Contains(buf.String(), long) {
+		t.Error("the long name was cut although it fits the terminal")
+	}
+}
+
+func TestRenderTableCapsColumnsWhenTheWidthIsUnknown(t *testing.T) {
+	long := strings.Repeat("x", 200)
+	var buf bytes.Buffer
+	if err := renderTable(&buf, []string{"NAME"}, [][]string{{long}}, nil, 0); err != nil {
+		t.Fatalf("got error %v, want none", err)
+	}
+	for _, line := range strings.Split(strings.TrimRight(buf.String(), "\n"), "\n") {
+		if w := runewidth.StringWidth(line); w > maxColumnWidth {
+			t.Errorf("line is %d wide, want at most %d", w, maxColumnWidth)
+		}
+	}
+}

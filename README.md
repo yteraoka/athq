@@ -117,6 +117,8 @@ athq wg desc analytics
 athq db list
 
 athq tbl list                # needs --db or ATHQ_DATABASE
+athq tbl list cloudtrail     # tables whose name contains cloudtrail
+athq tbl list 'log*'         # * is the wildcard, matched against the whole name
 athq tbl desc events         # SHOW CREATE TABLE
 athq tbl desc mydb.events
 athq tbl desc events --metadata   # catalog metadata, no query is run

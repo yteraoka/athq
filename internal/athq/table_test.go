@@ -1,6 +1,9 @@
 package athq
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestSplitTableNameWithDatabase(t *testing.T) {
 	db, table, err := splitTableName("analytics.events")
@@ -52,5 +55,31 @@ func TestQuoteIdentifierQuotesUnusualNames(t *testing.T) {
 	}
 	if got := quoteIdentifier(`we"ird`); got != `"we""ird"` {
 		t.Errorf("got = %q, want the inner quote doubled", got)
+	}
+}
+
+func TestFormatTimestampTreatsTheEpochAsNever(t *testing.T) {
+	epoch := time.Unix(0, 0)
+	if got := formatTimestamp(&epoch); got != "" {
+		t.Errorf("got = %q, want an empty string", got)
+	}
+	if got := formatTimestamp(nil); got != "" {
+		t.Errorf("nil: got = %q, want an empty string", got)
+	}
+	when := time.Date(2026, 8, 22, 10, 30, 0, 0, time.Local)
+	if got := formatTimestamp(&when); got != "2026-08-22 10:30:00" {
+		t.Errorf("got = %q, want %q", got, "2026-08-22 10:30:00")
+	}
+}
+
+func TestTablePatternWrapsAPlainWord(t *testing.T) {
+	if got := tablePattern("cloudtrail"); got != "*cloudtrail*" {
+		t.Errorf("got = %q, want %q", got, "*cloudtrail*")
+	}
+	if got := tablePattern("log*"); got != "log*" {
+		t.Errorf("a pattern with a wildcard: got = %q, want it unchanged", got)
+	}
+	if got := tablePattern(""); got != "" {
+		t.Errorf("empty: got = %q, want it unchanged", got)
 	}
 }
