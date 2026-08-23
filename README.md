@@ -10,13 +10,42 @@ A small command line tool to query Amazon Athena and look at the result.
 - `--tui` opens an interactive browser: write the query with the table
   definitions next to it
 
-## Install
+## Installation
+
+### Homebrew
+
+```bash
+brew tap yteraoka/cask
+brew trust yteraoka/cask
+brew install --cask athq
+```
+
+### mise
+
+```bash
+mise use -g github:yteraoka/athq
+```
+
+Pin a version instead of following the latest release:
+
+```bash
+mise use -g github:yteraoka/athq@0.1.0
+```
+
+### Go
 
 ```sh
 go install github.com/yteraoka/athq/cmd/athq@latest
 ```
 
-Or download a binary from the [releases](https://github.com/yteraoka/athq/releases).
+Or build from a checkout:
+
+```sh
+go build -o athq ./cmd/athq
+```
+
+Binaries for each release are also on the
+[releases page](https://github.com/yteraoka/athq/releases).
 
 ## Configuration
 
