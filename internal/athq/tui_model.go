@@ -66,6 +66,13 @@ type tuiModel struct {
 
 	focus tuiPane
 
+	// The work group and where its results go are shown in the header; the
+	// location has to be read from the work group unless it is overridden.
+	workGroupName string
+	output        outputSetting
+	wgLoading     bool
+	wgFailed      bool
+
 	databases  []tuiDatabase
 	rows       []catalogRow
 	catCursor  int
@@ -133,23 +140,25 @@ func newTUIModel(ctx context.Context, c *clients, initialSQL string, maxRows int
 	sp.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("212"))
 
 	return tuiModel{
-		ctx:        ctx,
-		clients:    c,
-		focus:      paneCatalog,
-		editor:     ta,
-		resultVP:   viewport.New(),
-		saveIn:     si,
-		nameIn:     ni,
-		descIn:     di,
-		spinner:    sp,
-		maxRows:    maxRows,
-		catLoading: true,
-		status:     "loading the catalog…",
+		ctx:           ctx,
+		clients:       c,
+		focus:         paneCatalog,
+		workGroupName: workGroup(),
+		wgLoading:     true,
+		editor:        ta,
+		resultVP:      viewport.New(),
+		saveIn:        si,
+		nameIn:        ni,
+		descIn:        di,
+		spinner:       sp,
+		maxRows:       maxRows,
+		catLoading:    true,
+		status:        "loading the catalog…",
 	}
 }
 
 func (m tuiModel) Init() tea.Cmd {
-	return tea.Batch(m.spinner.Tick, loadDatabasesCmd(m.ctx, m.clients))
+	return tea.Batch(m.spinner.Tick, loadDatabasesCmd(m.ctx, m.clients), loadWorkGroupCmd(m.ctx, m.clients))
 }
 
 func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -167,6 +176,21 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
+
+	case msgTUIWorkGroup:
+		m.wgLoading = false
+		if msg.err != nil {
+			// Queries can still be run, so this only takes the status line.
+			// An explicit location is still known; without one the header has
+			// to admit it does not know where the results go.
+			m.wgFailed = true
+			if loc := outputLocation(); loc != "" {
+				m.output = outputSetting{location: loc, source: outputLocationSource()}
+			}
+			return m.fail(msg.err), nil
+		}
+		m.output = msg.output
+		return m, nil
 
 	case msgTUIDatabases:
 		m.catLoading = false

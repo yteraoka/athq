@@ -118,7 +118,17 @@ athq q --tui -f query.sql
 The screen has the databases and their tables on the top left, the columns of
 the selected table on the top right, the query editor in the middle and the
 result at the bottom, so the definition stays visible while the query is
-written.
+written. A header above them names the work group the queries run in and the
+S3 location their results are written to:
+
+```
+work group: primary   output: s3://aws-athena-query-results-…/
+```
+
+The location is read from the work group unless `--output-location` (or
+`ATHQ_OUTPUT_LOCATION`) sets one, and the header says so when it does. A work
+group that enforces its own configuration ignores that override, and the
+header says that too.
 
 | Key | |
 | --- | --- |

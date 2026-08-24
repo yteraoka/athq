@@ -9,15 +9,15 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-// The screen is laid out as two panes on top (the catalog tree and the columns
-// of the selected table), the editor below them, then the result, and finally
-// a status and a help line.
+// The screen is laid out as a header with the work group and where its results
+// go, two panes below it (the catalog tree and the columns of the selected
+// table), the editor, the result, and finally a status and a help line.
 func (m *tuiModel) layout() {
 	if m.width < minTUIWidth || m.height < minTUIHeight {
 		return
 	}
 
-	usable := m.height - 2 // status + help
+	usable := m.height - 3 // header + status + help
 
 	m.topHeight = usable * 40 / 100
 	if m.topHeight < 6 {
@@ -87,6 +87,7 @@ func (m tuiModel) View() tea.View {
 	)
 
 	v.SetContent(lipgloss.JoinVertical(lipgloss.Left,
+		m.headerLine(),
 		top,
 		m.pane(m.focus == paneEditor, "query", m.editor.View(), m.width, m.editHeight),
 		m.pane(m.focus == paneResult, m.resultTitle(), m.resultVP.View(), m.width, m.resHeight),
@@ -217,6 +218,28 @@ func (m tuiModel) resultTitle() string {
 		suffix = fmt.Sprintf(" (first %d)", m.maxRows)
 	}
 	return fmt.Sprintf("result: %d rows%s", len(m.result.rows), suffix)
+}
+
+// headerLine names the work group the queries run in and the S3 location their
+// results are written to, which is otherwise only visible in `athq wg desc`.
+func (m tuiModel) headerLine() string {
+	text := "work group: " + m.workGroupName + "   output: " + m.outputText()
+	return styleTUIHeader.Render(truncatePad(text, m.width-2))
+}
+
+func (m tuiModel) outputText() string {
+	switch {
+	case m.wgLoading:
+		return "…"
+	case m.wgFailed && m.output.location == "":
+		return "unknown (the work group could not be read)"
+	case m.output.location == "":
+		return "not set (the work group has none)"
+	case m.output.source != "":
+		return m.output.location + " (" + m.output.source + ")"
+	default:
+		return m.output.location
+	}
 }
 
 func (m tuiModel) statusLine() string {
