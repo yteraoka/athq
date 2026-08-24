@@ -208,7 +208,7 @@ func (m tuiModel) savedPickerView() string {
 	return lipgloss.JoinVertical(lipgloss.Left,
 		m.pane(true, fmt.Sprintf("saved queries (%d)", len(m.savedQueries)), m.savedListContent(), m.width, listHeight),
 		m.pane(false, title, m.savedDetailContent(usable-listHeight-3), m.width, usable-listHeight),
-		styleTUIHelp.Render(truncatePad("↑↓ move · enter open · esc cancel", m.width-2)),
+		styleTUIHelp.Render(truncatePad("↑↓/click move · enter open · esc cancel", m.width-2)),
 	)
 }
 

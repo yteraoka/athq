@@ -64,6 +64,9 @@ func (m tuiModel) columnsVisibleRows() int { return max(1, m.topHeight-3) }
 func (m tuiModel) View() tea.View {
 	var v tea.View
 	v.AltScreen = true
+	// Clicking a table or a column puts its name into the query, which saves
+	// walking there with tab and i.
+	v.MouseMode = tea.MouseModeCellMotion
 
 	if !m.ready {
 		v.SetContent("\n  starting…\n")
@@ -271,9 +274,9 @@ func (m tuiModel) helpLine() string {
 	case m.mode == modeQueryDesc:
 		hints = "enter save the query · esc cancel"
 	case m.focus == paneCatalog:
-		hints = "tab pane · enter expand · i insert · r reload · ^r run · ^s save · ^w/^o saved query · q quit"
+		hints = "tab pane · enter expand · i/click insert · r reload · ^r run · ^s save · ^w/^o saved query · q quit"
 	case m.focus == paneColumns:
-		hints = "tab pane · i insert · ←back · ^r run · ^s save · ^w/^o saved query · q quit"
+		hints = "tab pane · i/click insert · ←back · ^r run · ^s save · ^w/^o saved query · q quit"
 	case m.focus == paneEditor:
 		hints = "esc leave editor · ^r run · ^s save · ^w/^o saved query · tab pane"
 	default:
