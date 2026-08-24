@@ -38,6 +38,11 @@ var (
 	styleTUIError = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("9"))
 
+	styleTUIHeader = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("249")).
+			Background(lipgloss.Color("234")).
+			Padding(0, 1)
+
 	styleTUIStatus = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("252")).
 			Background(lipgloss.Color("234")).

@@ -12,10 +12,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 )
 
+// testWorkGroup is what the TUI header shows in the tests; the environment of
+// whoever runs them must not decide it.
+const testWorkGroup = "primary"
+
 func newTestTUI(t *testing.T, width, height int) tuiModel {
 	t.Helper()
 	t.Setenv(envDatabase, "")
+	t.Setenv(envWorkGroup, testWorkGroup)
+	t.Setenv(envOutputLocation, "")
 	opts.database = ""
+	opts.workGroup = ""
+	opts.outputLocation = ""
 
 	m := newTUIModel(context.Background(), nil, "", 100)
 	next, _ := m.Update(tea.WindowSizeMsg{Width: width, Height: height})
@@ -118,6 +126,22 @@ func TestViewShowsTheCatalogAndTheColumnsOfTheSelectedTable(t *testing.T) {
 	for _, want := range []string{"analytics", "events", "sessions", "logs", "event_id", "varchar", "columns: analytics.events"} {
 		if !strings.Contains(content, want) {
 			t.Errorf("the view does not contain %q", want)
+		}
+	}
+}
+
+func TestViewFitsTheSmallestSupportedTerminal(t *testing.T) {
+	m := newTestTUI(t, minTUIWidth, minTUIHeight)
+	next, _ := m.Update(msgTUIDatabases{databases: []string{"analytics"}})
+	m = next.(tuiModel)
+
+	lines := strings.Split(m.View().Content, "\n")
+	if len(lines) != minTUIHeight {
+		t.Errorf("line count: got = %d, want %d", len(lines), minTUIHeight)
+	}
+	for i, line := range lines {
+		if w := lipgloss.Width(line); w > minTUIWidth {
+			t.Errorf("line %d is %d cells wide, want at most %d", i, w, minTUIWidth)
 		}
 	}
 }
