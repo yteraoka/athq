@@ -145,6 +145,14 @@ header says that too.
 | `ctrl+c` | stop a running query, or quit |
 | `q` | quit (outside the editor) |
 
+The mouse works as well, so a name can go into the query without walking there
+with `tab` and `i`: clicking a database opens or closes it, clicking a table
+selects it and clicking the selected table inserts `database.table`, and
+clicking a column inserts its name. Clicking the editor or the result moves the
+focus there, and the wheel scrolls whatever the pointer is over. Because athq
+takes the mouse while the TUI is open, selecting text with it needs the `shift`
+key, the way it does in other full screen terminal programs.
+
 The catalog is read with the metadata API, so browsing it runs no query and
 costs nothing. The result pane shows the first `--max-rows` rows (100 by
 default, `0` for all); saving always writes every row.
