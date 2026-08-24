@@ -1,9 +1,7 @@
 package athq
 
 import (
-	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -51,73 +49,18 @@ func appendHistory(path string, e historyEntry) error {
 		entries = entries[len(entries)-maxHistoryEntries:]
 	}
 
-	if dir := filepath.Dir(path); dir != "" && dir != "." {
-		if err := os.MkdirAll(dir, 0o700); err != nil {
-			return fmt.Errorf("failed to create %s: %w", dir, err)
+	return writeJSONLAtomic(path, func(enc *json.Encoder) error {
+		for _, entry := range entries {
+			if err := enc.Encode(entry); err != nil {
+				return err
+			}
 		}
-	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".history-*")
-	if err != nil {
-		return fmt.Errorf("failed to write the history: %w", err)
-	}
-	tmpName := tmp.Name()
-	defer func() { _ = os.Remove(tmpName) }()
-
-	if err := tmp.Chmod(0o600); err != nil {
-		_ = tmp.Close()
-		return fmt.Errorf("failed to write the history: %w", err)
-	}
-	w := bufio.NewWriter(tmp)
-	enc := json.NewEncoder(w)
-	enc.SetEscapeHTML(false)
-	for _, entry := range entries {
-		if err := enc.Encode(entry); err != nil {
-			_ = tmp.Close()
-			return fmt.Errorf("failed to write the history: %w", err)
-		}
-	}
-	if err := w.Flush(); err != nil {
-		_ = tmp.Close()
-		return fmt.Errorf("failed to write the history: %w", err)
-	}
-	if err := tmp.Close(); err != nil {
-		return fmt.Errorf("failed to write the history: %w", err)
-	}
-	if err := os.Rename(tmpName, path); err != nil {
-		return fmt.Errorf("failed to write the history: %w", err)
-	}
-	return nil
+		return nil
+	})
 }
 
 func readHistoryFile(path string) ([]historyEntry, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to read %s: %w", path, err)
-	}
-	defer func() { _ = f.Close() }()
-
-	var entries []historyEntry
-	sc := bufio.NewScanner(f)
-	sc.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
-	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
-		if line == "" {
-			continue
-		}
-		var e historyEntry
-		if err := json.Unmarshal([]byte(line), &e); err != nil {
-			// A damaged line should not make the whole command fail.
-			continue
-		}
-		entries = append(entries, e)
-	}
-	if err := sc.Err(); err != nil {
-		return nil, fmt.Errorf("failed to read %s: %w", path, err)
-	}
-	return entries, nil
+	return readJSONLFile[historyEntry](path)
 }
 
 // readHistory returns the newest n entries, oldest first. n <= 0 returns all.

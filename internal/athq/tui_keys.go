@@ -5,22 +5,24 @@ import "charm.land/bubbles/v2/key"
 // tuiKeyMap holds the bindings that work outside the editor. The editor keeps
 // its own bindings; only the ones listed here are taken away from it.
 type tuiKeyMap struct {
-	Up       key.Binding
-	Down     key.Binding
-	PageUp   key.Binding
-	PageDown key.Binding
-	Left     key.Binding
-	Right    key.Binding
-	Toggle   key.Binding
-	Insert   key.Binding
-	NextPane key.Binding
-	PrevPane key.Binding
-	Run      key.Binding
-	Save     key.Binding
-	Reload   key.Binding
-	Escape   key.Binding
-	Quit     key.Binding
-	Cancel   key.Binding
+	Up        key.Binding
+	Down      key.Binding
+	PageUp    key.Binding
+	PageDown  key.Binding
+	Left      key.Binding
+	Right     key.Binding
+	Toggle    key.Binding
+	Insert    key.Binding
+	NextPane  key.Binding
+	PrevPane  key.Binding
+	Run       key.Binding
+	Save      key.Binding
+	SaveQuery key.Binding
+	OpenQuery key.Binding
+	Reload    key.Binding
+	Escape    key.Binding
+	Quit      key.Binding
+	Cancel    key.Binding
 }
 
 var tuiKeys = tuiKeyMap{
@@ -70,7 +72,18 @@ var tuiKeys = tuiKeyMap{
 	),
 	Save: key.NewBinding(
 		key.WithKeys("ctrl+s"),
-		key.WithHelp("^s", "save"),
+		key.WithHelp("^s", "save the result"),
+	),
+	// ^w writes the query away under a name and ^o opens one back. ^w is also
+	// the editor's second binding for delete word backward; alt+backspace
+	// still does that.
+	SaveQuery: key.NewBinding(
+		key.WithKeys("ctrl+w"),
+		key.WithHelp("^w", "save the query"),
+	),
+	OpenQuery: key.NewBinding(
+		key.WithKeys("ctrl+o"),
+		key.WithHelp("^o", "open a saved query"),
 	),
 	Reload: key.NewBinding(
 		key.WithKeys("r"),

@@ -48,6 +48,10 @@ func (m *tuiModel) layout() {
 	m.resultVP.SetHeight(m.resHeight - 3)
 	m.refreshResultPane()
 	m.saveIn.SetWidth(m.width - 12)
+	// "save the query as: " plus the input's own "> " and the padding of the
+	// status line have to fit next to them.
+	m.nameIn.SetWidth(m.width - 24)
+	m.descIn.SetWidth(m.width - 24)
 
 	m.catOffset = scrollOffset(m.catCursor, m.catOffset, m.catalogVisibleRows())
 	m.colOffset = scrollOffset(m.colCursor, m.colOffset, m.columnsVisibleRows())
@@ -70,15 +74,22 @@ func (m tuiModel) View() tea.View {
 		return v
 	}
 
+	// Picking a saved query takes the whole screen: the list and the entry
+	// under it need more room than the status line has.
+	if m.mode == modeOpenQuery {
+		v.SetContent(m.savedPickerView())
+		return v
+	}
+
 	top := lipgloss.JoinHorizontal(lipgloss.Top,
-		m.pane(paneCatalog, "databases / tables", m.catalogContent(), m.catalogWidth, m.topHeight),
-		m.pane(paneColumns, m.columnsTitle(), m.columnsContent(), m.columnsWidth, m.topHeight),
+		m.pane(m.focus == paneCatalog, "databases / tables", m.catalogContent(), m.catalogWidth, m.topHeight),
+		m.pane(m.focus == paneColumns, m.columnsTitle(), m.columnsContent(), m.columnsWidth, m.topHeight),
 	)
 
 	v.SetContent(lipgloss.JoinVertical(lipgloss.Left,
 		top,
-		m.pane(paneEditor, "query", m.editor.View(), m.width, m.editHeight),
-		m.pane(paneResult, m.resultTitle(), m.resultVP.View(), m.width, m.resHeight),
+		m.pane(m.focus == paneEditor, "query", m.editor.View(), m.width, m.editHeight),
+		m.pane(m.focus == paneResult, m.resultTitle(), m.resultVP.View(), m.width, m.resHeight),
 		m.statusLine(),
 		m.helpLine(),
 	))
@@ -86,9 +97,9 @@ func (m tuiModel) View() tea.View {
 }
 
 // pane draws one bordered box with a title line inside it.
-func (m tuiModel) pane(id tuiPane, title, content string, width, height int) string {
+func (m tuiModel) pane(focused bool, title, content string, width, height int) string {
 	frame, titleStyle := styleTUIPane, styleTUITitle
-	if m.focus == id {
+	if focused {
 		frame, titleStyle = styleTUIPaneFocused, styleTUITitleFocused
 	}
 	inner := width - 2
@@ -211,8 +222,12 @@ func (m tuiModel) resultTitle() string {
 func (m tuiModel) statusLine() string {
 	width := m.width
 	switch {
-	case m.saving:
+	case m.mode == modeSaveResult:
 		return styleTUIStatus.Render(padANSI("save to: "+m.saveIn.View(), width-2))
+	case m.mode == modeQueryName:
+		return styleTUIStatus.Render(padANSI("save the query as: "+m.nameIn.View(), width-2))
+	case m.mode == modeQueryDesc:
+		return styleTUIStatus.Render(padANSI("description: "+m.descIn.View(), width-2))
 	case m.running:
 		text := fmt.Sprintf("%s running %s  (^c to cancel)", m.spinner.View(), formatDuration(time.Since(m.runStart)))
 		return styleTUIStatus.Render(padANSI(text, width-2))
@@ -226,16 +241,20 @@ func (m tuiModel) statusLine() string {
 func (m tuiModel) helpLine() string {
 	var hints string
 	switch {
-	case m.saving:
+	case m.mode == modeSaveResult:
 		hints = "enter save · esc cancel"
+	case m.mode == modeQueryName:
+		hints = "enter next (description) · esc cancel"
+	case m.mode == modeQueryDesc:
+		hints = "enter save the query · esc cancel"
 	case m.focus == paneCatalog:
-		hints = "tab pane · enter expand · i insert · r reload · ^r run · ^s save · q quit"
+		hints = "tab pane · enter expand · i insert · r reload · ^r run · ^s save · ^w/^o saved query · q quit"
 	case m.focus == paneColumns:
-		hints = "tab pane · i insert · ←back · ^r run · ^s save · q quit"
+		hints = "tab pane · i insert · ←back · ^r run · ^s save · ^w/^o saved query · q quit"
 	case m.focus == paneEditor:
-		hints = "esc leave editor · ^r run · ^s save · tab pane"
+		hints = "esc leave editor · ^r run · ^s save · ^w/^o saved query · tab pane"
 	default:
-		hints = "↑↓←→ scroll · tab pane · ^s save · q quit"
+		hints = "↑↓←→ scroll · tab pane · ^s save · ^w/^o saved query · q quit"
 	}
 	return styleTUIHelp.Render(truncatePad(hints, m.width-2))
 }

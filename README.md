@@ -10,13 +10,42 @@ A small command line tool to query Amazon Athena and look at the result.
 - `--tui` opens an interactive browser: write the query with the table
   definitions next to it
 
-## Install
+## Installation
+
+### Homebrew
+
+```bash
+brew tap yteraoka/cask
+brew trust yteraoka/cask
+brew install --cask athq
+```
+
+### mise
+
+```bash
+mise use -g github:yteraoka/athq
+```
+
+Pin a version instead of following the latest release:
+
+```bash
+mise use -g github:yteraoka/athq@0.1.0
+```
+
+### Go
 
 ```sh
 go install github.com/yteraoka/athq/cmd/athq@latest
 ```
 
-Or download a binary from the [releases](https://github.com/yteraoka/athq/releases).
+Or build from a checkout:
+
+```sh
+go build -o athq ./cmd/athq
+```
+
+Binaries for each release are also on the
+[releases page](https://github.com/yteraoka/athq/releases).
 
 ## Configuration
 
@@ -35,6 +64,7 @@ Everything else is optional:
 | `ATHQ_PRICE_PER_TB` | – | `5.0` (for the cost estimate) |
 | `ATHQ_EDITOR` | – | `$VISUAL`, `$EDITOR`, then `vi` |
 | `ATHQ_HISTORY_FILE` | – | `<user cache dir>/athq/history.jsonl` |
+| `ATHQ_SAVED_QUERIES_FILE` | – | `~/.config/athq/queries.jsonl` |
 
 A flag beats the environment variable, which beats the default.
 
@@ -99,6 +129,8 @@ written.
 | `r` | reload the catalog |
 | `ctrl+r` | run the query in the editor |
 | `ctrl+s` | save the whole result; the format follows the extension typed |
+| `ctrl+w` | save the query in the editor under a name and a description |
+| `ctrl+o` | open a saved query |
 | `esc` | leave the editor |
 | `ctrl+c` | stop a running query, or quit |
 | `q` | quit (outside the editor) |
@@ -106,6 +138,16 @@ written.
 The catalog is read with the metadata API, so browsing it runs no query and
 costs nothing. The result pane shows the first `--max-rows` rows (100 by
 default, `0` for all); saving always writes every row.
+
+`ctrl+w` puts the query aside: it asks for a name, then for a description, and
+writes both together with the query and the time into
+`~/.config/athq/queries.jsonl` (`$XDG_CONFIG_HOME/athq` when that is set).
+Saving under a name that is already there replaces it.
+
+`ctrl+o` lists what has been saved. The list shows the name, when it was saved
+and the description, with the whole entry — including the query itself — below
+it, so it can be read before `enter` puts it into the editor. `esc` leaves the
+list without touching the editor.
 
 When a query fails, the whole message goes into the result pane, wrapped and
 scrollable, together with the execution id — the status line at the bottom has

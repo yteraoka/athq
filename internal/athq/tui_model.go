@@ -29,6 +29,18 @@ const (
 	paneCount
 )
 
+// tuiMode says which prompt or overlay is on top of the panes. Everything but
+// modeNormal takes the keyboard away from them.
+type tuiMode int
+
+const (
+	modeNormal tuiMode = iota
+	modeSaveResult
+	modeQueryName
+	modeQueryDesc
+	modeOpenQuery
+)
+
 const (
 	minTUIWidth  = 60
 	minTUIHeight = 16
@@ -76,8 +88,19 @@ type tuiModel struct {
 	cancelRun context.CancelFunc
 	spinner   spinner.Model
 
-	saving bool
+	mode   tuiMode
 	saveIn textinput.Model
+
+	// The prompt for saving the query under a name, and the picker that opens
+	// one back. savedName and savedDesc are what the last save or open used,
+	// so saving the same query again suggests them.
+	nameIn       textinput.Model
+	descIn       textinput.Model
+	savedName    string
+	savedDesc    string
+	savedQueries []savedQuery
+	savedCursor  int
+	savedOffset  int
 
 	status    string
 	statusErr bool
@@ -99,6 +122,12 @@ func newTUIModel(ctx context.Context, c *clients, initialSQL string, maxRows int
 	si := textinput.New()
 	si.Placeholder = "result.csv"
 
+	ni := textinput.New()
+	ni.Placeholder = "daily active users"
+
+	di := textinput.New()
+	di.Placeholder = "what the query answers (optional)"
+
 	sp := spinner.New()
 	sp.Spinner = spinner.Dot
 	sp.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("212"))
@@ -110,6 +139,8 @@ func newTUIModel(ctx context.Context, c *clients, initialSQL string, maxRows int
 		editor:     ta,
 		resultVP:   viewport.New(),
 		saveIn:     si,
+		nameIn:     ni,
+		descIn:     di,
 		spinner:    sp,
 		maxRows:    maxRows,
 		catLoading: true,
@@ -209,6 +240,24 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.statusErr = false
 		return m, nil
 
+	case msgTUIQuerySaved:
+		if msg.err != nil {
+			return m.fail(msg.err), nil
+		}
+		verb := "saved the query as "
+		if msg.replaced {
+			verb = "replaced the saved query "
+		}
+		m.status = verb + msg.name
+		m.statusErr = false
+		return m, nil
+
+	case msgTUISavedQueries:
+		if msg.err != nil {
+			return m.fail(msg.err), nil
+		}
+		return m.showSavedQueries(msg.queries), nil
+
 	case tea.KeyPressMsg:
 		return m.handleKey(msg)
 	}
@@ -293,8 +342,8 @@ func wrapText(s string, width int) string {
 }
 
 func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	if m.saving {
-		return m.handleSaveKey(msg)
+	if m.mode != modeNormal {
+		return m.handleModeKey(msg)
 	}
 
 	// While a query runs, Ctrl-C cancels it instead of quitting; the Athena
@@ -318,6 +367,10 @@ func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m.startQuery()
 	case key.Matches(msg, tuiKeys.Save):
 		return m.startSave()
+	case key.Matches(msg, tuiKeys.SaveQuery):
+		return m.startSaveQuery()
+	case key.Matches(msg, tuiKeys.OpenQuery):
+		return m.startOpenQuery()
 	}
 
 	if m.focus == paneEditor {
@@ -346,15 +399,28 @@ func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// handleModeKey routes the keyboard to whatever prompt or overlay is open.
+func (m tuiModel) handleModeKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	switch m.mode {
+	case modeSaveResult:
+		return m.handleSaveKey(msg)
+	case modeQueryName, modeQueryDesc:
+		return m.handleSaveQueryKey(msg)
+	case modeOpenQuery:
+		return m.handleOpenQueryKey(msg)
+	}
+	return m, nil
+}
+
 func (m tuiModel) handleSaveKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "esc", "ctrl+c":
-		m.saving = false
+		m.mode = modeNormal
 		m.saveIn.Blur()
 		return m, nil
 	case "enter":
 		path := strings.TrimSpace(m.saveIn.Value())
-		m.saving = false
+		m.mode = modeNormal
 		m.saveIn.Blur()
 		if path == "" {
 			return m, nil
@@ -510,7 +576,7 @@ func (m tuiModel) startSave() (tea.Model, tea.Cmd) {
 	if m.qe == nil {
 		return m.fail(fmt.Errorf("there is no result to save")), nil
 	}
-	m.saving = true
+	m.mode = modeSaveResult
 	m.saveIn.SetValue("")
 	return m, m.saveIn.Focus()
 }

@@ -235,7 +235,7 @@ func TestSaveNeedsAResult(t *testing.T) {
 	next, _ := m.startSave()
 	m = next.(tuiModel)
 
-	if m.saving {
+	if m.mode != modeNormal {
 		t.Error("got the save prompt, want it refused without a result")
 	}
 	if !m.statusErr {
