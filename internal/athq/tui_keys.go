@@ -15,6 +15,7 @@ type tuiKeyMap struct {
 	Insert    key.Binding
 	NextPane  key.Binding
 	PrevPane  key.Binding
+	Complete  key.Binding
 	Run       key.Binding
 	Save      key.Binding
 	SaveQuery key.Binding
@@ -65,6 +66,12 @@ var tuiKeys = tuiKeyMap{
 	PrevPane: key.NewBinding(
 		key.WithKeys("shift+tab"),
 		key.WithHelp("shift+tab", "previous pane"),
+	),
+	// tab belongs to the editor while it has the focus; shift+tab and esc are
+	// what leave it then.
+	Complete: key.NewBinding(
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "complete the name"),
 	),
 	Run: key.NewBinding(
 		key.WithKeys("ctrl+r"),

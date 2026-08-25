@@ -140,7 +140,7 @@ header says that too.
 
 | Key | |
 | --- | --- |
-| `tab` / `shift+tab` | move between the panes |
+| `tab` / `shift+tab` | move between the panes (in the editor `tab` completes) |
 | `↑` `↓` `←` `→` (or `k` `j` `h` `l`) | move around inside a pane |
 | `enter` | expand a database, or insert the selected column |
 | `i` | insert the selected name into the editor (`database.table` or a column) |
@@ -150,8 +150,20 @@ header says that too.
 | `ctrl+w` | save the query in the editor under a name and a description |
 | `ctrl+o` | open a saved query |
 | `esc` | leave the editor |
+| `tab` (in the editor) | complete the name before the cursor |
 | `ctrl+c` | stop a running query, or quit |
 | `q` | quit (outside the editor) |
+
+In the editor `tab` completes the name being typed from the catalog that is
+already on screen, so no API is called and no query is run. A bare word is
+matched against the database names, the tables of the databases that have been
+opened and the columns of the table being looked at; `analytics.` offers the
+tables of that database and `analytics.events.` its columns. A database whose
+tables have not been fetched yet has nothing to offer, and a word with no
+candidate leaves the editor alone — no tab character is inserted. When several
+names match, the first `tab` fills in as much as they all share and lists them
+on the status line, and the ones after it insert each candidate in turn. The
+editor is still left with `esc` or `shift+tab`.
 
 The mouse works as well, so a name can go into the query without walking there
 with `tab` and `i`: clicking a database opens or closes it, clicking a table

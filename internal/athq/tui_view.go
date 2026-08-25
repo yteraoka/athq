@@ -278,7 +278,7 @@ func (m tuiModel) helpLine() string {
 	case m.focus == paneColumns:
 		hints = "tab pane · i/click insert · ←back · ^r run · ^s save · ^w/^o saved query · q quit"
 	case m.focus == paneEditor:
-		hints = "esc leave editor · ^r run · ^s save · ^w/^o saved query · tab pane"
+		hints = "tab complete · esc leave editor · shift+tab pane · ^r run · ^s save · ^w/^o saved query"
 	default:
 		hints = "↑↓←→ scroll · tab pane · ^s save · ^w/^o saved query · q quit"
 	}
