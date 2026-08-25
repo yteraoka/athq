@@ -66,8 +66,14 @@ func pressKey(t *testing.T, m tuiModel, s string) tuiModel {
 		msg = tea.KeyPressMsg{Code: tea.KeyEnter}
 	case "tab":
 		msg = tea.KeyPressMsg{Code: tea.KeyTab}
+	case "shift+tab":
+		msg = tea.KeyPressMsg{Code: tea.KeyTab, Mod: tea.ModShift}
+	case "esc":
+		msg = tea.KeyPressMsg{Code: tea.KeyEscape}
 	case "down":
 		msg = tea.KeyPressMsg{Code: tea.KeyDown}
+	case "left":
+		msg = tea.KeyPressMsg{Code: tea.KeyLeft}
 	default:
 		r := []rune(s)[0]
 		msg = tea.KeyPressMsg{Code: r, Text: s}
@@ -188,7 +194,7 @@ func TestInsertFromTheColumnsPane(t *testing.T) {
 	}
 }
 
-func TestTabCyclesThroughThePanes(t *testing.T) {
+func TestTabCyclesThroughThePanesOutsideTheEditor(t *testing.T) {
 	m := loadedTUI(t)
 	if m.focus != paneCatalog {
 		t.Fatalf("initial focus: got = %v, want the catalog", m.focus)
@@ -201,13 +207,30 @@ func TestTabCyclesThroughThePanes(t *testing.T) {
 	if m.focus != paneEditor {
 		t.Errorf("after two tabs: got = %v, want the editor", m.focus)
 	}
-	m = pressKey(t, m, "tab")
+	// In the editor tab completes instead of moving on, so the pane is left
+	// with esc or shift+tab.
+	m = pressKey(t, m, "esc")
+	if m.focus != paneCatalog {
+		t.Errorf("after esc: got = %v, want the catalog", m.focus)
+	}
+	m = pressKey(t, m, "shift+tab")
 	if m.focus != paneResult {
-		t.Errorf("after three tabs: got = %v, want the result", m.focus)
+		t.Errorf("after shift+tab: got = %v, want the result", m.focus)
 	}
 	m = pressKey(t, m, "tab")
 	if m.focus != paneCatalog {
-		t.Errorf("after four tabs: got = %v, want the catalog again", m.focus)
+		t.Errorf("after one more tab: got = %v, want the catalog again", m.focus)
+	}
+}
+
+func TestShiftTabLeavesTheEditor(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+
+	m = pressKey(t, m, "shift+tab")
+	if m.focus != paneColumns {
+		t.Errorf("got = %v, want the columns pane", m.focus)
 	}
 }
 

@@ -112,6 +112,10 @@ type tuiModel struct {
 	status    string
 	statusErr bool
 
+	// what the last tab in the editor completed, so the next one can offer
+	// the following candidate
+	completion tuiCompletion
+
 	// pane geometry, recomputed on every resize
 	catalogWidth, columnsWidth       int
 	topHeight, editHeight, resHeight int
@@ -388,6 +392,14 @@ func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	}
 
+	// In the editor tab completes the name being typed instead of moving on;
+	// shift+tab and esc still leave the pane. Any other key ends a run of
+	// completions.
+	if m.focus == paneEditor && key.Matches(msg, tuiKeys.Complete) {
+		return m.completeWord()
+	}
+	m.completion = tuiCompletion{}
+
 	switch {
 	case key.Matches(msg, tuiKeys.NextPane):
 		return m.setFocus((m.focus + 1) % paneCount)
@@ -544,6 +556,7 @@ func (m tuiModel) handleColumnsKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (m tuiModel) setFocus(p tuiPane) (tea.Model, tea.Cmd) {
 	m.focus = p
+	m.completion = tuiCompletion{}
 	if p == paneEditor {
 		return m, m.editor.Focus()
 	}
@@ -578,6 +591,7 @@ func (m tuiModel) insertCurrentName() (tea.Model, tea.Cmd) {
 }
 
 func (m tuiModel) insert(text string) (tea.Model, tea.Cmd) {
+	m.completion = tuiCompletion{}
 	m.editor.InsertString(text)
 	m.status = "inserted " + text
 	m.statusErr = false
