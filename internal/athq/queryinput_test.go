@@ -52,6 +52,66 @@ func TestResolveQueryRejectsCommentsOnly(t *testing.T) {
 	}
 }
 
+func TestInitialTUIQueryWithNoSourceStartsEmpty(t *testing.T) {
+	got, err := initialTUIQuery(nil, "", false, nil)
+	if err != nil {
+		t.Fatalf("got error %v, want none", err)
+	}
+	if got != "" {
+		t.Errorf("got = %q, want an empty string", got)
+	}
+}
+
+func TestInitialTUIQueryFromArgument(t *testing.T) {
+	got, err := initialTUIQuery([]string{"SELECT", "1"}, "", false, nil)
+	if err != nil {
+		t.Fatalf("got error %v, want none", err)
+	}
+	if got != "SELECT 1" {
+		t.Errorf("got = %q, want %q", got, "SELECT 1")
+	}
+}
+
+func TestInitialTUIQueryFromFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "q.sql")
+	if err := os.WriteFile(path, []byte("  SELECT 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	got, err := initialTUIQuery(nil, path, false, nil)
+	if err != nil {
+		t.Fatalf("got error %v, want none", err)
+	}
+	if got != "SELECT 1" {
+		t.Errorf("got = %q, want %q", got, "SELECT 1")
+	}
+}
+
+func TestInitialTUIQueryFromStdin(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	go func() {
+		_, _ = w.WriteString("SELECT 1")
+		_ = w.Close()
+	}()
+
+	got, err := initialTUIQuery(nil, "", false, r)
+	if err != nil {
+		t.Fatalf("got error %v, want none", err)
+	}
+	if got != "SELECT 1" {
+		t.Errorf("got = %q, want %q", got, "SELECT 1")
+	}
+}
+
+func TestInitialTUIQueryPropagatesAFileError(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "missing.sql")
+	if _, err := initialTUIQuery(nil, missing, false, nil); err == nil {
+		t.Error("got no error for a missing file, want one")
+	}
+}
+
 func TestIsBlankQuery(t *testing.T) {
 	if !isBlankQuery("\n-- just a comment\n\n") {
 		t.Error("comments only: got = false, want true")

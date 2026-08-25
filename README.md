@@ -7,8 +7,8 @@ A small command line tool to query Amazon Athena and look at the result.
 - See how much data was scanned and roughly what it costs
 - Ctrl-C stops the query on the Athena side too
 - List work groups and databases, and print the DDL of a table
-- `--tui` opens an interactive browser: write the query with the table
-  definitions next to it
+- Run with no subcommand (or `athq query --tui`) to open an interactive
+  browser: write the query with the table definitions next to it
 
 ## Installation
 
@@ -110,10 +110,18 @@ running on the Athena side as well.
 ### Interactive mode
 
 ```sh
-athq q --tui                       # or -t
-athq q --tui "SELECT * FROM events"   # start with a query in the editor
+athq                                   # opens with an empty editor
+athq -f query.sql                      # opens with the file's query
+athq q --tui                           # or -t
+athq q --tui "SELECT * FROM events"    # start with a query in the editor
 athq q --tui -f query.sql
 ```
+
+Running `athq` with no subcommand opens the same interactive browser as
+`athq q --tui`. `-f`/`--file` (`-` for stdin) preloads the editor with a
+query from a file, but unlike `athq q --tui` the query cannot be given as a
+plain argument — `athq "SELECT ..."` is rejected as an unknown command, so
+use `athq q --tui "SELECT ..."` for that instead.
 
 The screen has the databases and their tables on the top left, the columns of
 the selected table on the top right, the query editor in the middle and the

@@ -47,6 +47,16 @@ func resolveQuery(args []string, file string, useEditor bool, stdin *os.File) (s
 	return "", errors.New("no query given: pass it as an argument, with --file, with --editor or on stdin")
 }
 
+// initialTUIQuery resolves the query to preload into the TUI editor. Unlike
+// resolveQuery, having no source at all is not an error: the editor just
+// starts empty.
+func initialTUIQuery(args []string, file string, useEditor bool, stdin *os.File) (string, error) {
+	if len(args) == 0 && file == "" && !useEditor && !isPiped(stdin) {
+		return "", nil
+	}
+	return resolveQuery(args, file, useEditor, stdin)
+}
+
 func queryFromFile(path string) (string, error) {
 	if path == "-" {
 		b, err := io.ReadAll(os.Stdin)
