@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.2.1](https://github.com/yteraoka/athq/compare/v0.2.0...v0.2.1) - 2026-08-25
+
+- サブコマンドなしでの athq 実行をデフォルトで TUI にする by @yteraoka in https://github.com/yteraoka/athq/pull/23
+
 ## [v0.1.2](https://github.com/yteraoka/athq/compare/v0.1.1...v0.1.2) - 2026-08-24
 
 - TUI でクエリを保存・呼び出しできるようにする by @yteraoka in https://github.com/yteraoka/athq/pull/17
