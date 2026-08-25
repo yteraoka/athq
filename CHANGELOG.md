@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.3.1](https://github.com/yteraoka/athq/compare/v0.3.0...v0.3.1) - 2026-08-25
+
+- TUI のクエリエディタで tab による補完を実装する by @yteraoka in https://github.com/yteraoka/athq/pull/25
+
 ## [v0.2.1](https://github.com/yteraoka/athq/compare/v0.2.0...v0.2.1) - 2026-08-25
 
 - サブコマンドなしでの athq 実行をデフォルトで TUI にする by @yteraoka in https://github.com/yteraoka/athq/pull/23
