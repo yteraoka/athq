@@ -17,6 +17,10 @@ import (
 
 var errCanceled = errors.New("interrupted")
 
+// defaultMaxRows is how many result rows are shown when --max-rows is not
+// given, both on stdout and in the TUI result pane.
+const defaultMaxRows = 100
+
 var queryOpts struct {
 	output  string
 	file    string
@@ -54,7 +58,7 @@ func init() {
 	f.StringVarP(&queryOpts.file, "file", "f", "", "read the query from this file (- for stdin)")
 	f.BoolVarP(&queryOpts.editor, "editor", "e", false, "write the query in $EDITOR")
 	f.StringVar(&queryOpts.format, "format", "", "output format: table, csv, tsv, json, jsonl or raw (raw copies the file Athena wrote)")
-	f.IntVar(&queryOpts.maxRows, "max-rows", 100, "rows to show on stdout (0 for all)")
+	f.IntVar(&queryOpts.maxRows, "max-rows", defaultMaxRows, "rows to show on stdout (0 for all)")
 	f.StringVar(&queryOpts.id, "id", "", "fetch the result of an existing query execution instead of running one")
 	f.BoolVar(&queryOpts.last, "last", false, "fetch the result of the last successful query")
 	f.BoolVar(&queryOpts.quiet, "quiet", false, "do not print the execution statistics")
@@ -84,13 +88,9 @@ func runQuery(cmd *cobra.Command, args []string) error {
 		if queryOpts.id != "" || queryOpts.last {
 			return errors.New("--tui cannot be combined with --id or --last")
 		}
-		// The query is optional here: the editor starts empty without one.
-		initial := ""
-		if len(args) > 0 || queryOpts.file != "" || queryOpts.editor || isPiped(os.Stdin) {
-			initial, err = resolveQuery(args, queryOpts.file, queryOpts.editor, os.Stdin)
-			if err != nil {
-				return err
-			}
+		initial, err := initialTUIQuery(args, queryOpts.file, queryOpts.editor, os.Stdin)
+		if err != nil {
+			return err
 		}
 		return runTUI(ctx, c, initial, queryOpts.maxRows)
 	}

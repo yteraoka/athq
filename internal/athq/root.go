@@ -38,12 +38,41 @@ type globalOptions struct {
 
 var opts globalOptions
 
+// rootOpts holds the flags accepted when athq is run with no subcommand,
+// which opens the same interactive browser as `athq query --tui`.
+var rootOpts struct {
+	file string
+}
+
 var rootCmd = &cobra.Command{
-	Use:           "athq",
-	Short:         "Query Amazon Athena from the command line",
-	Long:          "athq runs queries against Amazon Athena and shows or saves the results,\nand lists work groups, databases and table definitions.",
+	Use:   "athq",
+	Short: "Query Amazon Athena from the command line",
+	Long: "athq runs queries against Amazon Athena and shows or saves the results,\n" +
+		"and lists work groups, databases and table definitions.\n\n" +
+		"Run with no subcommand to open the interactive browser (like `athq query --tui`).",
 	SilenceUsage:  true,
 	SilenceErrors: true,
+	RunE:          runRoot,
+}
+
+// runRoot opens the interactive browser, optionally preloaded with a query
+// read from --file or piped on stdin. Unlike `athq query`, the query cannot
+// be given as a plain argument, since a bare word there would be ambiguous
+// with a subcommand name.
+func runRoot(_ *cobra.Command, _ []string) error {
+	ctx, stop := signalContext()
+	defer stop()
+
+	c, err := newClients(ctx)
+	if err != nil {
+		return err
+	}
+
+	initial, err := initialTUIQuery(nil, rootOpts.file, false, os.Stdin)
+	if err != nil {
+		return err
+	}
+	return runTUI(ctx, c, initial, defaultMaxRows)
 }
 
 // SetVersionInfo records the build information injected by the linker.
@@ -71,6 +100,9 @@ func init() {
 	pf.StringVar(&opts.catalog, "catalog", "", "data catalog name (env "+envCatalog+", default "+defaultCatalog+")")
 	pf.StringVar(&opts.region, "region", "", "AWS region (default: the usual AWS resolution)")
 	pf.StringVar(&opts.profile, "profile", "", "AWS shared config profile")
+
+	// Local (not persistent) so it does not collide with query's own -f/--file.
+	rootCmd.Flags().StringVarP(&rootOpts.file, "file", "f", "", "read the query from this file (- for stdin) and preload it into the interactive browser")
 
 	// cobra/pflag allow only one long name per flag, so --wg and --db are
 	// accepted by normalizing them onto their canonical names.
