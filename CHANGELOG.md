@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.4.1](https://github.com/yteraoka/athq/compare/v0.4.0...v0.4.1) - 2026-08-26
+
+- query pane (エディタ) にいても ^c で終了できることを表示する by @yteraoka in https://github.com/yteraoka/athq/pull/32
+- query pane でマウスのドラッグ選択とコピペを可能にする by @yteraoka in https://github.com/yteraoka/athq/pull/34
+- columns pane で partition projection の日付形式などを表示する by @yteraoka in https://github.com/yteraoka/athq/pull/35
+- Update Songmu/tagpr action to v1.20.2 by @renovate[bot] in https://github.com/yteraoka/athq/pull/28
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/27
+
 ## [v0.3.1](https://github.com/yteraoka/athq/compare/v0.3.0...v0.3.1) - 2026-08-25
 
 - TUI のクエリエディタで tab による補完を実装する by @yteraoka in https://github.com/yteraoka/athq/pull/25
