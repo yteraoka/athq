@@ -136,6 +136,31 @@ func TestViewShowsTheCatalogAndTheColumnsOfTheSelectedTable(t *testing.T) {
 	}
 }
 
+func TestViewShowsThePartitionProjectionFormat(t *testing.T) {
+	m := newTestTUI(t, 100, 40)
+	next, _ := m.Update(msgTUIDatabases{databases: []string{"logs"}})
+	m = next.(tuiModel)
+	next, _ = m.Update(msgTUITables{
+		database: "logs",
+		tables: []tuiTable{
+			{name: "events", columns: []tuiColumn{
+				{name: "dt", typ: "string", partition: true, projection: "date yyyy/MM/dd"},
+			}},
+		},
+	})
+	m = next.(tuiModel)
+	m.databases[0].expanded = true
+	m.databases[0].loaded = true
+	m.rows = catalogRows(m.databases)
+	m.catCursor = 1 // the events table
+	m.clampCatalogCursor()
+
+	content := stripANSI(m.View().Content)
+	if !strings.Contains(content, "partition: date yyyy/MM/dd") {
+		t.Errorf("the view does not show the partition's projection format:\n%s", content)
+	}
+}
+
 func TestViewFitsTheSmallestSupportedTerminal(t *testing.T) {
 	m := newTestTUI(t, minTUIWidth, minTUIHeight)
 	next, _ := m.Update(msgTUIDatabases{databases: []string{"analytics"}})

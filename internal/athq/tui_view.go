@@ -193,7 +193,11 @@ func (m tuiModel) columnsContent() string {
 		c := columns[i]
 		text := truncatePad(c.name, nameWidth) + "  " + c.typ
 		if c.partition {
-			text += "  (partition)"
+			text += "  (partition"
+			if c.projection != "" {
+				text += ": " + c.projection
+			}
+			text += ")"
 		}
 		line := truncatePad(text, width)
 		switch {
