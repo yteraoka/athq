@@ -138,6 +138,15 @@ The location is read from the work group unless `--output-location` (or
 group that enforces its own configuration ignores that override, and the
 header says that too.
 
+A partition key in the columns pane is marked `(partition)`, and when the
+table uses [partition
+projection](https://docs.aws.amazon.com/athena/latest/ug/partition-projection.html)
+its configuration is summarized there too, e.g. `(partition: date yyyy/MM/dd)`
+or `(partition: enum dev, staging, prod)` — read from the table's own
+properties, so this costs nothing extra. A plainly Hive-partitioned table has
+no such format on file; its columns just say `(partition)`, and the actual
+value format can only be told from the real partition values.
+
 | Key | |
 | --- | --- |
 | `tab` / `shift+tab` | move between the panes (in the editor `tab` completes) |

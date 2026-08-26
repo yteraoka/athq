@@ -3,6 +3,7 @@ package athq
 import (
 	"context"
 	"sort"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,6 +20,11 @@ type tuiColumn struct {
 	typ       string
 	comment   string
 	partition bool
+	// projection summarizes the partition's projection configuration, e.g.
+	// "date yyyy/MM/dd" or "enum a, b, c". Empty when projection is not
+	// enabled for the column, which is the common case for a plain
+	// Hive-partitioned table with no format to show.
+	projection string
 }
 
 type tuiTable struct {
@@ -115,12 +121,45 @@ func toTUIColumns(m types.TableMetadata) []tuiColumn {
 		})
 	}
 	for _, c := range m.PartitionKeys {
+		name := aws.ToString(c.Name)
 		columns = append(columns, tuiColumn{
-			name:      aws.ToString(c.Name),
-			typ:       aws.ToString(c.Type),
-			comment:   aws.ToString(c.Comment),
-			partition: true,
+			name:       name,
+			typ:        aws.ToString(c.Type),
+			comment:    aws.ToString(c.Comment),
+			partition:  true,
+			projection: partitionProjection(m.Parameters, name),
 		})
 	}
 	return columns
+}
+
+// partitionProjection reads a partition column's projection configuration
+// (https://docs.aws.amazon.com/athena/latest/ug/partition-projection-supported-types.html)
+// out of the table's parameters and summarizes it, e.g. "date yyyy/MM/dd".
+// Most tables do not use projection, in which case this is empty and the
+// partition's actual format can only be told from its real values.
+func partitionProjection(params map[string]string, column string) string {
+	if params["projection.enabled"] != "true" {
+		return ""
+	}
+	prefix := "projection." + column + "."
+	typ := params[prefix+"type"]
+	if typ == "" {
+		return ""
+	}
+	switch typ {
+	case "date":
+		if format := params[prefix+"format"]; format != "" {
+			return "date " + format
+		}
+	case "integer":
+		if r := params[prefix+"range"]; r != "" {
+			return "integer " + strings.Replace(r, ",", "–", 1)
+		}
+	case "enum":
+		if values := params[prefix+"values"]; values != "" {
+			return "enum " + strings.ReplaceAll(values, ",", ", ")
+		}
+	}
+	return typ
 }
