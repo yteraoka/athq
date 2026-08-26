@@ -151,8 +151,8 @@ header says that too.
 | `ctrl+o` | open a saved query |
 | `esc` | leave the editor |
 | `tab` (in the editor) | complete the name before the cursor |
-| `ctrl+c` | stop a running query, or quit |
-| `q` | quit (outside the editor) |
+| `ctrl+c` | stop a running query, or quit (works in the editor too) |
+| `q` | quit (outside the editor, since `q` is a character there) |
 
 In the editor `tab` completes the name being typed from the catalog that is
 already on screen, so no API is called and no query is run. A bare word is

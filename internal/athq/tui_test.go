@@ -247,6 +247,47 @@ func TestKeysGoToTheEditorWhenItIsFocused(t *testing.T) {
 	}
 }
 
+func TestCtrlCQuitsEvenWhenTheEditorIsFocused(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+
+	next, cmd := m.Update(tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
+	m = next.(tuiModel)
+
+	if cmd == nil {
+		t.Fatal("got no command, want tea.Quit")
+	}
+	if _, ok := cmd().(tea.QuitMsg); !ok {
+		t.Errorf("got %T, want a tea.QuitMsg", cmd())
+	}
+	if m.editor.Value() != "" {
+		t.Errorf("got editor value %q, want ctrl+c left the editor untouched", m.editor.Value())
+	}
+}
+
+func TestCtrlCCancelsARunningQueryInsteadOfQuitting(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+	m.running = true
+	canceled := false
+	m.cancelRun = func() { canceled = true }
+
+	next, cmd := m.Update(tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
+	m = next.(tuiModel)
+
+	if cmd != nil {
+		t.Error("got a command, want none: a running query is cancelled, not quit")
+	}
+	if !canceled {
+		t.Error("got the running query left alone, want cancelRun called")
+	}
+	if !strings.Contains(m.status, "cancel") {
+		t.Errorf("status: got %q, want it to mention cancelling", m.status)
+	}
+}
+
 func TestEnterExpandsADatabase(t *testing.T) {
 	m := newTestTUI(t, 100, 40)
 	next, _ := m.Update(msgTUIDatabases{databases: []string{"analytics"}})
