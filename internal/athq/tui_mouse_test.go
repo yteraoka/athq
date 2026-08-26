@@ -191,6 +191,68 @@ func TestTheWheelScrollsTheResultPane(t *testing.T) {
 	}
 }
 
+// dragEditor simulates a mouse-down at (x1, y1), a drag to (x2, y2) and the
+// button coming back up, the sequence a real click-and-drag selection sends.
+func dragEditor(t *testing.T, m tuiModel, x1, y1, x2, y2 int) tuiModel {
+	t.Helper()
+	m = click(t, m, x1, y1)
+	next, _ := m.Update(tea.MouseMotionMsg{X: x2, Y: y2, Button: tea.MouseLeft})
+	m = next.(tuiModel)
+	next, _ = m.Update(tea.MouseReleaseMsg{X: x2, Y: y2, Button: tea.MouseLeft})
+	return next.(tuiModel)
+}
+
+func TestDraggingInTheEditorSelectsText(t *testing.T) {
+	m := loadedTUI(t)
+	m.editor.SetValue("aaaa\nbbbb\ncccc")
+
+	top := m.editorTop()
+	// x=1 is the first content column regardless of the gutter width, so the
+	// drag starts before "aaaa". x=20 is well past every 4-rune line, so the
+	// end resolves past "cccc" the same way regardless of that width too.
+	m = dragEditor(t, m, 1, top+2, 20, top+4)
+
+	if !m.editor.HasSelection() {
+		t.Fatal("got no selection, want the drag to have selected text")
+	}
+	if got := m.editor.SelectedText(); got != "aaaa\nbbbb\ncccc" {
+		t.Errorf("got = %q, want the three lines selected", got)
+	}
+	start, end, ok := m.editor.Selection()
+	if !ok || start.Row != 0 || end.Row != 2 {
+		t.Errorf("selection rows: got start=%v end=%v (ok=%v), want row 0 to row 2", start, end, ok)
+	}
+}
+
+func TestClickingTheEditorWithoutDraggingLeavesNoSelection(t *testing.T) {
+	m := loadedTUI(t)
+	m.editor.SetValue("aaaa\nbbbb\ncccc")
+
+	top := m.editorTop()
+	m = dragEditor(t, m, 20, top+2, 20, top+2)
+
+	if m.editor.HasSelection() {
+		t.Errorf("got a selection %q, want a plain click to leave none", m.editor.SelectedText())
+	}
+}
+
+func TestDraggingOutsideTheEditorDoesNotSelectItsText(t *testing.T) {
+	m := loadedTUI(t)
+	m.editor.SetValue("aaaa\nbbbb\ncccc")
+
+	// A drag that starts on the catalog never calls BeginSelection, so the
+	// motion and release that follow must stay no-ops.
+	m = click(t, m, 2, firstTopPaneRow)
+	next, _ := m.Update(tea.MouseMotionMsg{X: 2, Y: firstTopPaneRow + 1, Button: tea.MouseLeft})
+	m = next.(tuiModel)
+	next, _ = m.Update(tea.MouseReleaseMsg{X: 2, Y: firstTopPaneRow + 1, Button: tea.MouseLeft})
+	m = next.(tuiModel)
+
+	if m.editor.HasSelection() {
+		t.Errorf("got a selection %q, want none from a drag that never touched the editor", m.editor.SelectedText())
+	}
+}
+
 func TestClickingTheSavedQueryPickerSelectsThenOpens(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "queries.jsonl")
 	t.Setenv(envSavedQueriesFile, path)

@@ -288,6 +288,61 @@ func TestCtrlCCancelsARunningQueryInsteadOfQuitting(t *testing.T) {
 	}
 }
 
+func TestShiftRightSelectsTextInTheEditor(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+	m.editor.SetValue("SELECT 1")
+	m.editor.MoveToBegin() // SetValue leaves the cursor at the end, after the insert
+
+	for range len("SELECT") {
+		next, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyRight, Mod: tea.ModShift})
+		m = next.(tuiModel)
+	}
+
+	if !m.editor.HasSelection() {
+		t.Fatal("got no selection, want shift+right to have selected text")
+	}
+	if got := m.editor.SelectedText(); got != "SELECT" {
+		t.Errorf("got = %q, want %q", got, "SELECT")
+	}
+}
+
+// The commands below are never run: doing so would touch the real system
+// clipboard, which is not reliably available in a test environment. A
+// non-nil command shows the key reached the editor's own binding instead of
+// being swallowed by athq's global key handling first.
+func TestCtrlShiftCIsRoutedToTheEditorForCopying(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+	m.editor.SetValue("SELECT 1")
+	m.editor.MoveToBegin()
+	for range len("SELECT") {
+		next, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyRight, Mod: tea.ModShift})
+		m = next.(tuiModel)
+	}
+	if !m.editor.HasSelection() {
+		t.Fatal("setup: want a selection before copying it")
+	}
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl | tea.ModShift})
+	if cmd == nil {
+		t.Error("got no command, want the editor's copy-selection command")
+	}
+}
+
+func TestCtrlVIsRoutedToTheEditorForPasting(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'v', Mod: tea.ModCtrl})
+	if cmd == nil {
+		t.Error("got no command, want the editor's paste command")
+	}
+}
+
 func TestEnterExpandsADatabase(t *testing.T) {
 	m := newTestTUI(t, 100, 40)
 	next, _ := m.Update(msgTUIDatabases{databases: []string{"analytics"}})
