@@ -288,6 +288,110 @@ func TestCtrlCCancelsARunningQueryInsteadOfQuitting(t *testing.T) {
 	}
 }
 
+func TestShiftRightSelectsTextInTheEditor(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+	m.editor.SetValue("SELECT 1")
+	m.editor.MoveToBegin() // SetValue leaves the cursor at the end, after the insert
+
+	for range len("SELECT") {
+		next, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyRight, Mod: tea.ModShift})
+		m = next.(tuiModel)
+	}
+
+	if !m.editor.HasSelection() {
+		t.Fatal("got no selection, want shift+right to have selected text")
+	}
+	if got := m.editor.SelectedText(); got != "SELECT" {
+		t.Errorf("got = %q, want %q", got, "SELECT")
+	}
+}
+
+// The commands below are never run: doing so would touch the real system
+// clipboard, which is not reliably available in a test environment. A
+// non-nil command shows the key reached the editor's own binding instead of
+// being swallowed by athq's global key handling first.
+func TestCtrlShiftCIsRoutedToTheEditorForCopying(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+	m.editor.SetValue("SELECT 1")
+	m.editor.MoveToBegin()
+	for range len("SELECT") {
+		next, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyRight, Mod: tea.ModShift})
+		m = next.(tuiModel)
+	}
+	if !m.editor.HasSelection() {
+		t.Fatal("setup: want a selection before copying it")
+	}
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl | tea.ModShift})
+	if cmd == nil {
+		t.Error("got no command, want the editor's copy-selection command")
+	}
+}
+
+func TestCtrlVIsRoutedToTheEditorForPasting(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'v', Mod: tea.ModCtrl})
+	if cmd == nil {
+		t.Error("got no command, want the editor's paste command")
+	}
+}
+
+// Most terminals send a bracketed paste (tea.PasteMsg) for the platform paste
+// shortcut, e.g. cmd+v on a Mac, rather than a literal ctrl+v key press, so
+// this needs its own handling in addition to the ctrl+v binding above.
+func TestPasteInsertsIntoTheFocusedEditor(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+
+	next, _ := m.Update(tea.PasteMsg{Content: "SELECT 1"})
+	m = next.(tuiModel)
+
+	if got := m.editor.Value(); got != "SELECT 1" {
+		t.Errorf("got = %q, want the pasted text in the editor", got)
+	}
+}
+
+func TestPasteIsIgnoredOutsideTheEditor(t *testing.T) {
+	m := loadedTUI(t)
+	if m.focus != paneCatalog {
+		t.Fatalf("initial focus: got = %v, want the catalog", m.focus)
+	}
+
+	next, _ := m.Update(tea.PasteMsg{Content: "SELECT 1"})
+	m = next.(tuiModel)
+
+	if got := m.editor.Value(); got != "" {
+		t.Errorf("editor: got = %q, want it untouched", got)
+	}
+}
+
+func TestPasteIsIgnoredWhileAPromptIsOpen(t *testing.T) {
+	m := loadedTUI(t)
+	m.editor.SetValue("SELECT 1")
+	m = pressCtrl(t, m, 'w') // the name prompt; focus is still nominally the editor
+
+	next, _ := m.Update(tea.PasteMsg{Content: "garbage"})
+	m = next.(tuiModel)
+
+	if m.mode != modeQueryName {
+		t.Errorf("mode: got = %v, want the prompt still open", m.mode)
+	}
+	if got := m.editor.Value(); got != "SELECT 1" {
+		t.Errorf("editor: got = %q, want it untouched", got)
+	}
+	if got := m.nameIn.Value(); got != "" {
+		t.Errorf("name prompt: got = %q, want the paste not misdirected into it either", got)
+	}
+}
+
 func TestEnterExpandsADatabase(t *testing.T) {
 	m := newTestTUI(t, 100, 40)
 	next, _ := m.Update(msgTUIDatabases{databases: []string{"analytics"}})

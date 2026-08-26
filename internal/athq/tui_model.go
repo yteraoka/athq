@@ -289,8 +289,17 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m.handleKey(msg)
 
+	case tea.PasteMsg:
+		return m.handlePaste(msg)
+
 	case tea.MouseClickMsg:
 		return m.handleMouseClick(msg)
+
+	case tea.MouseMotionMsg:
+		return m.handleMouseMotion(msg)
+
+	case tea.MouseReleaseMsg:
+		return m.handleMouseRelease(msg)
 
 	case tea.MouseWheelMsg:
 		return m.handleMouseWheel(msg)
@@ -439,6 +448,21 @@ func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	}
 	return m, nil
+}
+
+// handlePaste inserts a terminal-native (bracketed) paste into the editor.
+// This is what most terminals actually send for the platform paste shortcut
+// (e.g. cmd+v on a Mac) instead of a literal ctrl+v key press, which is why
+// pasting needs handling here in addition to textarea's own ctrl+v binding.
+// Pasting only means something in the editor, and only outside a prompt,
+// which does not change m.focus while it is open.
+func (m tuiModel) handlePaste(msg tea.PasteMsg) (tea.Model, tea.Cmd) {
+	if m.mode != modeNormal || m.focus != paneEditor {
+		return m, nil
+	}
+	var cmd tea.Cmd
+	m.editor, cmd = m.editor.Update(msg)
+	return m, cmd
 }
 
 // handleModeKey routes the keyboard to whatever prompt or overlay is open.

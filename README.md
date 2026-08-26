@@ -151,6 +151,10 @@ header says that too.
 | `ctrl+o` | open a saved query |
 | `esc` | leave the editor |
 | `tab` (in the editor) | complete the name before the cursor |
+| `click`+drag (in the editor) | select text |
+| `shift` + arrow keys (in the editor) | select text without the mouse |
+| `ctrl+shift+c` (in the editor) | copy the selection to the clipboard |
+| `ctrl+v` or a terminal paste (in the editor) | paste from the clipboard |
 | `ctrl+c` | stop a running query, or quit (works in the editor too) |
 | `q` | quit (outside the editor, since `q` is a character there) |
 
@@ -169,9 +173,17 @@ The mouse works as well, so a name can go into the query without walking there
 with `tab` and `i`: clicking a database opens or closes it, clicking a table
 selects it and clicking the selected table inserts `database.table`, and
 clicking a column inserts its name. Clicking the editor or the result moves the
-focus there, and the wheel scrolls whatever the pointer is over. Because athq
-takes the mouse while the TUI is open, selecting text with it needs the `shift`
-key, the way it does in other full screen terminal programs.
+focus there, and the wheel scrolls whatever the pointer is over.
+
+In the query editor, clicking and dragging selects text directly, and
+`ctrl+shift+c` copies the selection to the system clipboard; `shift` with the
+arrow keys selects without the mouse at all. Pasting works both with `ctrl+v`
+and with however the terminal itself pastes (e.g. cmd+v on a Mac); most
+terminals, Ghostty included, send that as a bracketed paste rather than a
+literal ctrl+v, and both are handled. Elsewhere — the catalog, the columns and
+the result — athq still takes the mouse while the TUI is open, so selecting
+text there needs the `shift` key to fall back to the terminal's own selection,
+the way it does in other full screen terminal programs.
 
 The catalog is read with the metadata API, so browsing it runs no query and
 costs nothing. The result pane shows the first `--max-rows` rows (100 by
