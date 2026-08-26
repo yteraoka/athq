@@ -343,6 +343,55 @@ func TestCtrlVIsRoutedToTheEditorForPasting(t *testing.T) {
 	}
 }
 
+// Most terminals send a bracketed paste (tea.PasteMsg) for the platform paste
+// shortcut, e.g. cmd+v on a Mac, rather than a literal ctrl+v key press, so
+// this needs its own handling in addition to the ctrl+v binding above.
+func TestPasteInsertsIntoTheFocusedEditor(t *testing.T) {
+	m := loadedTUI(t)
+	m.focus = paneEditor
+	m.editor.Focus()
+
+	next, _ := m.Update(tea.PasteMsg{Content: "SELECT 1"})
+	m = next.(tuiModel)
+
+	if got := m.editor.Value(); got != "SELECT 1" {
+		t.Errorf("got = %q, want the pasted text in the editor", got)
+	}
+}
+
+func TestPasteIsIgnoredOutsideTheEditor(t *testing.T) {
+	m := loadedTUI(t)
+	if m.focus != paneCatalog {
+		t.Fatalf("initial focus: got = %v, want the catalog", m.focus)
+	}
+
+	next, _ := m.Update(tea.PasteMsg{Content: "SELECT 1"})
+	m = next.(tuiModel)
+
+	if got := m.editor.Value(); got != "" {
+		t.Errorf("editor: got = %q, want it untouched", got)
+	}
+}
+
+func TestPasteIsIgnoredWhileAPromptIsOpen(t *testing.T) {
+	m := loadedTUI(t)
+	m.editor.SetValue("SELECT 1")
+	m = pressCtrl(t, m, 'w') // the name prompt; focus is still nominally the editor
+
+	next, _ := m.Update(tea.PasteMsg{Content: "garbage"})
+	m = next.(tuiModel)
+
+	if m.mode != modeQueryName {
+		t.Errorf("mode: got = %v, want the prompt still open", m.mode)
+	}
+	if got := m.editor.Value(); got != "SELECT 1" {
+		t.Errorf("editor: got = %q, want it untouched", got)
+	}
+	if got := m.nameIn.Value(); got != "" {
+		t.Errorf("name prompt: got = %q, want the paste not misdirected into it either", got)
+	}
+}
+
 func TestEnterExpandsADatabase(t *testing.T) {
 	m := newTestTUI(t, 100, 40)
 	next, _ := m.Update(msgTUIDatabases{databases: []string{"analytics"}})
