@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.5.1](https://github.com/yteraoka/athq/compare/v0.5.0...v0.5.1) - 2026-09-02
+
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/36
+- Rename GitHub App credential vars/secrets in workflows by @yteraoka in https://github.com/yteraoka/athq/pull/40
+- Renovate: minor 以下の更新を auto merge する by @yteraoka in https://github.com/yteraoka/athq/pull/41
+- Update dependency golangci/golangci-lint to v2.13.2 by @renovate[bot] in https://github.com/yteraoka/athq/pull/39
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/38
+- Update module github.com/aws/aws-sdk-go-v2/service/athena to v1.63.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/42
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/43
+- Update dependency go to v1.27.1 by @renovate[bot] in https://github.com/yteraoka/athq/pull/44
+- Update module github.com/mattn/go-runewidth to v0.0.29 by @renovate[bot] in https://github.com/yteraoka/athq/pull/45
+- Double the max column width in query result tables by @yteraoka in https://github.com/yteraoka/athq/pull/46
+
 ## [v0.4.1](https://github.com/yteraoka/athq/compare/v0.4.0...v0.4.1) - 2026-08-26
 
 - query pane (エディタ) にいても ^c で終了できることを表示する by @yteraoka in https://github.com/yteraoka/athq/pull/32
