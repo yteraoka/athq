@@ -84,6 +84,7 @@ func (m tuiModel) handleMouseClick(msg tea.MouseClickMsg) (tea.Model, tea.Cmd) {
 		m.focus = paneEditor
 		ex, ey := m.editorPos(msg.X, msg.Y)
 		m.editor.BeginSelection(ex, ey)
+		m.vimSyncFromEditor()
 		return m, m.editor.Focus()
 	case paneResult:
 		return m.setFocus(hit.pane)
@@ -180,6 +181,7 @@ func (m tuiModel) handleMouseMotion(msg tea.MouseMotionMsg) (tea.Model, tea.Cmd)
 // EndSelection is a no-op when there was no drag to finish.
 func (m tuiModel) handleMouseRelease(_ tea.MouseReleaseMsg) (tea.Model, tea.Cmd) {
 	m.editor.EndSelection()
+	m.vimAfterDrag()
 	return m, nil
 }
 

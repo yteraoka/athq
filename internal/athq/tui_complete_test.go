@@ -9,9 +9,7 @@ import (
 // which is where tab completes.
 func editorTUI(t *testing.T, sql string) tuiModel {
 	t.Helper()
-	m := loadedTUI(t)
-	m.focus = paneEditor
-	m.editor.Focus()
+	m := insertingEditor(loadedTUI(t))
 	m.editor.SetValue(sql)
 	m.editor.MoveToEnd()
 	return m

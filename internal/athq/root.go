@@ -3,6 +3,7 @@ package athq
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -16,6 +17,7 @@ const (
 	envDatabase       = "ATHQ_DATABASE"
 	envOutputLocation = "ATHQ_OUTPUT_LOCATION"
 	envCatalog        = "ATHQ_CATALOG"
+	envVim            = "ATHQ_VIM"
 )
 
 var (
@@ -34,9 +36,14 @@ type globalOptions struct {
 	catalog        string
 	region         string
 	profile        string
+	vim            bool
 }
 
 var opts globalOptions
+
+// vimFlag is the --vim flag itself, kept so that vimEnabled can tell a flag
+// that was given from one that was left at its default.
+var vimFlag *pflag.Flag
 
 // rootOpts holds the flags accepted when athq is run with no subcommand,
 // which opens the same interactive browser as `athq query --tui`.
@@ -100,6 +107,8 @@ func init() {
 	pf.StringVar(&opts.catalog, "catalog", "", "data catalog name (env "+envCatalog+", default "+defaultCatalog+")")
 	pf.StringVar(&opts.region, "region", "", "AWS region (default: the usual AWS resolution)")
 	pf.StringVar(&opts.profile, "profile", "", "AWS shared config profile")
+	pf.BoolVar(&opts.vim, "vim", true, "vi style modal editing in the interactive query editor (env "+envVim+")")
+	vimFlag = pf.Lookup("vim")
 
 	// Local (not persistent) so it does not collide with query's own -f/--file.
 	rootCmd.Flags().StringVarP(&rootOpts.file, "file", "f", "", "read the query from this file (- for stdin) and preload it into the interactive browser")
@@ -154,4 +163,20 @@ func requireDatabase() (string, error) {
 		return "", fmt.Errorf("no database given: use --database (--db) or set %s", envDatabase)
 	}
 	return db, nil
+}
+
+// vimEnabled says whether the interactive editor is modal. It follows the
+// same flag > env > default order as the options above, which resolveOption
+// cannot do for a boolean: --vim=false and ATHQ_VIM=0 both look like the zero
+// value, and only the flag's own Changed tells one from a default.
+func vimEnabled() bool {
+	if vimFlag != nil && vimFlag.Changed {
+		return opts.vim
+	}
+	switch strings.ToLower(strings.TrimSpace(os.Getenv(envVim))) {
+	case "0", "false", "no", "off":
+		return false
+	default:
+		return true
+	}
 }

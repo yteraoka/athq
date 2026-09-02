@@ -65,6 +65,7 @@ Everything else is optional:
 | `ATHQ_EDITOR` | – | `$VISUAL`, `$EDITOR`, then `vi` |
 | `ATHQ_HISTORY_FILE` | – | `<user cache dir>/athq/history.jsonl` |
 | `ATHQ_SAVED_QUERIES_FILE` | – | `~/.config/athq/queries.jsonl` |
+| `ATHQ_VIM` | `--vim` | `1` (vi keys in the interactive editor) |
 
 A flag beats the environment variable, which beats the default.
 
@@ -149,7 +150,7 @@ value format can only be told from the real partition values.
 
 | Key | |
 | --- | --- |
-| `tab` / `shift+tab` | move between the panes (in the editor `tab` completes) |
+| `tab` / `shift+tab` | move between the panes (while typing in the editor `tab` completes) |
 | `↑` `↓` `←` `→` (or `k` `j` `h` `l`) | move around inside a pane |
 | `enter` | expand a database, or insert the selected column |
 | `i` | insert the selected name into the editor (`database.table` or a column) |
@@ -158,12 +159,13 @@ value format can only be told from the real partition values.
 | `ctrl+s` | save the whole result; the format follows the extension typed |
 | `ctrl+w` | save the query in the editor under a name and a description |
 | `ctrl+o` | open a saved query |
-| `esc` | leave the editor |
-| `tab` (in the editor) | complete the name before the cursor |
+| `esc` | leave the editor (in vim mode, stop inserting first) |
+| `tab` (while typing in the editor) | complete the name before the cursor |
 | `click`+drag (in the editor) | select text |
-| `shift` + arrow keys (in the editor) | select text without the mouse |
-| `ctrl+shift+c` (in the editor) | copy the selection to the clipboard |
-| `ctrl+v` or a terminal paste (in the editor) | paste from the clipboard |
+| `shift` + arrow keys (while typing in the editor) | select text without the mouse |
+| `ctrl+y` (in the editor) | copy the selection to the system clipboard |
+| `ctrl+v` or a terminal paste (in the editor) | paste from the system clipboard |
+| `f2` | hand the mouse to the terminal, and take it back |
 | `ctrl+c` | stop a running query, or quit (works in the editor too) |
 | `q` | quit (outside the editor, since `q` is a character there) |
 
@@ -176,7 +178,7 @@ tables have not been fetched yet has nothing to offer, and a word with no
 candidate leaves the editor alone — no tab character is inserted. When several
 names match, the first `tab` fills in as much as they all share and lists them
 on the status line, and the ones after it insert each candidate in turn. The
-editor is still left with `esc` or `shift+tab`.
+editor is left with `shift+tab`, or with `esc` once nothing is being typed.
 
 The mouse works as well, so a name can go into the query without walking there
 with `tab` and `i`: clicking a database opens or closes it, clicking a table
@@ -184,15 +186,64 @@ selects it and clicking the selected table inserts `database.table`, and
 clicking a column inserts its name. Clicking the editor or the result moves the
 focus there, and the wheel scrolls whatever the pointer is over.
 
-In the query editor, clicking and dragging selects text directly, and
-`ctrl+shift+c` copies the selection to the system clipboard; `shift` with the
-arrow keys selects without the mouse at all. Pasting works both with `ctrl+v`
-and with however the terminal itself pastes (e.g. cmd+v on a Mac); most
-terminals, Ghostty included, send that as a bracketed paste rather than a
-literal ctrl+v, and both are handled. Elsewhere — the catalog, the columns and
-the result — athq still takes the mouse while the TUI is open, so selecting
-text there needs the `shift` key to fall back to the terminal's own selection,
-the way it does in other full screen terminal programs.
+#### The query editor is modal
+
+The editor uses vi keys: it starts in **normal** mode, where the keys are
+commands, and `i` (or `a`, `A`, `I`, `o`, `O`, `c`, `s`) starts **inserting**.
+`esc` stops inserting; a second `esc` leaves the pane. The pane title says
+which mode it is in — `query — NORMAL`, `query — INSERT`, `query — VISUAL`
+— and the cursor stands still while commanding and blinks while typing.
+`--vim=false` or `ATHQ_VIM=0` turns all of it off and leaves the plain text
+editor of before, with its emacs style keys (`ctrl+a`, `ctrl+k`, `alt+f`, …),
+which are also what insert mode still has.
+
+| | |
+| --- | --- |
+| move | `h` `j` `k` `l`, `w` `W` `b` `B` `e` `E`, `0` `^` `$`, `{` `}`, `gg` `G`, `5G`, `ctrl+d` `ctrl+u` `ctrl+f` `ctrl+b`, and the arrow keys |
+| insert | `i` `a` `I` `A` `o` `O`, `s` `S`, `c{motion}` `cc` `C` |
+| delete | `x` `X`, `d{motion}` `dd` `D` |
+| copy and paste | `y{motion}` `yy` `Y`, `p` `P` |
+| select | `v` charwise, `V` whole lines, then `y` `d` `c` |
+| the rest | `r{char}` replace one character, `J` join the lines, `u` undo, a count before any of them (`3dd`, `2w`) |
+
+`ctrl+r` runs the query in every mode, so it is not vim's redo; `u` goes back
+one change at a time, up to 200 of them. Tab completion belongs to insert
+mode, where a name is being typed; in normal mode `tab` moves between the
+panes like everywhere else.
+
+#### Copying and pasting
+
+**Copying.** `y` in normal or visual mode — or `ctrl+y`, which also copies a
+selection made with the mouse or with `shift` and the arrow keys — puts the
+text on the system clipboard two ways at once, because no single one works in
+every terminal:
+
+* as an [OSC 52](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html)
+  sequence, which the terminal itself acts on and which is the only way that
+  survives an `ssh` session. Windows Terminal and Ghostty do it; Terminal.app
+  ignores it.
+* through a helper program on the machine athq runs on: `pbcopy`, `wl-copy`,
+  `xclip`, `xsel`, or `clip.exe` under WSL. This is what covers Terminal.app
+  and any terminal with OSC 52 turned off.
+
+The status line says how much was copied, and mentions it when there was no
+helper program to use. `ctrl+shift+c` is deliberately *not* the key: Windows
+Terminal and Ghostty keep that combination for their own copy, and Terminal.app
+cannot send it at all — it arrives as a bare `ctrl+c`, which would quit athq.
+
+**Pasting.** However the terminal itself pastes works (`cmd+v`, `ctrl+shift+v`,
+middle click): terminals send that as a bracketed paste, which athq puts into
+the editor at the cursor, or beside it like `p` when the editor is not
+inserting. `ctrl+v` does the same by reading the clipboard through the helper
+program, for terminals that have no paste of their own.
+
+**Selecting with the terminal instead.** athq holds the mouse while the TUI is
+open, so dragging in the catalog, the columns or the result pane does not
+select text the way it does in a shell. Either use the terminal's override
+(`shift` in Windows Terminal and Ghostty, `fn` in Terminal.app) or press `f2`,
+which hands the mouse back to the terminal until `f2` takes it again. In the
+query editor athq does the selecting itself: click and drag selects, and the
+selection carries on into visual mode, so `y` copies it.
 
 The catalog is read with the metadata API, so browsing it runs no query and
 costs nothing. The result pane shows the first `--max-rows` rows (100 by

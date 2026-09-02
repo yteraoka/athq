@@ -24,6 +24,10 @@ type tuiKeyMap struct {
 	Escape    key.Binding
 	Quit      key.Binding
 	Cancel    key.Binding
+
+	Copy        key.Binding
+	Paste       key.Binding
+	ToggleMouse key.Binding
 }
 
 var tuiKeys = tuiKeyMap{
@@ -107,5 +111,25 @@ var tuiKeys = tuiKeyMap{
 	Cancel: key.NewBinding(
 		key.WithKeys("ctrl+c"),
 		key.WithHelp("^c", "cancel/quit"),
+	),
+
+	// Copying is ^y, not the ctrl+shift+c that terminals show in their own
+	// menus: Windows Terminal and Ghostty keep that combination for
+	// themselves, and Terminal.app cannot even send it — it arrives as a bare
+	// ^c, which would quit athq. It is still listed here for the terminals
+	// that do pass it through. In vim mode y is the usual way.
+	Copy: key.NewBinding(
+		key.WithKeys("ctrl+y", "ctrl+shift+c"),
+		key.WithHelp("^y", "copy the selection"),
+	),
+	Paste: key.NewBinding(
+		key.WithKeys("ctrl+v"),
+		key.WithHelp("^v", "paste"),
+	),
+	// Releasing the mouse hands selecting back to the terminal, which is how
+	// text is copied out of the panes athq does not select in.
+	ToggleMouse: key.NewBinding(
+		key.WithKeys("f2"),
+		key.WithHelp("f2", "release/take the mouse"),
 	),
 }
