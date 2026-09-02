@@ -343,7 +343,7 @@ func writeTable(w io.Writer, rt *resultTable, maxWidth int) error {
 
 const (
 	tableGap         = "  "
-	maxColumnWidth   = 60
+	maxColumnWidth   = 120
 	minShrunkenWidth = 8
 )
 
