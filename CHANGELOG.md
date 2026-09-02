@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.5.2](https://github.com/yteraoka/athq/compare/v0.5.1...v0.5.2) - 2026-09-02
+
+- エディタペインのコピー＆ペーストを直し、vim キーバインドを入れる by @yteraoka in https://github.com/yteraoka/athq/pull/47
+
 ## [v0.5.1](https://github.com/yteraoka/athq/compare/v0.5.0...v0.5.1) - 2026-09-02
 
 - Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/36
