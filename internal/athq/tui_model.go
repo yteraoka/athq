@@ -85,6 +85,11 @@ type tuiModel struct {
 	editor   textarea.Model
 	resultVP viewport.Model
 
+	// vim is the modal layer over the editor; see tui_vim.go. mouseOff is
+	// f2: athq lets go of the mouse so the terminal can select text itself.
+	vim      vimState
+	mouseOff bool
+
 	qe      *types.QueryExecution
 	result  *resultTable
 	errText string
@@ -143,7 +148,12 @@ func newTUIModel(ctx context.Context, c *clients, initialSQL string, maxRows int
 	sp.Spinner = spinner.Dot
 	sp.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("212"))
 
-	return tuiModel{
+	vim := vimState{on: vimEnabled(), mode: vimInsert}
+	if vim.on {
+		vim.mode = vimNormal
+	}
+
+	m := tuiModel{
 		ctx:           ctx,
 		clients:       c,
 		focus:         paneCatalog,
@@ -158,7 +168,14 @@ func newTUIModel(ctx context.Context, c *clients, initialSQL string, maxRows int
 		maxRows:       maxRows,
 		catLoading:    true,
 		status:        "loading the catalog…",
+		vim:           vim,
 	}
+	if m.vim.on {
+		// The cursor sits on a character in normal mode, not past the last
+		// one where SetValue left it.
+		m.vimMoveTo(m.vimBuffer(), vimPos{row: ta.Line(), col: ta.Column()})
+	}
+	return m
 }
 
 func (m tuiModel) Init() tea.Cmd {
@@ -286,6 +303,12 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m.showSavedQueries(msg.queries), nil
 
+	case msgTUICopied:
+		return m.showCopied(msg), nil
+
+	case msgTUIPasted:
+		return m.showPasted(msg)
+
 	case tea.KeyPressMsg:
 		return m.handleKey(msg)
 
@@ -401,10 +424,17 @@ func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	}
 
+	// Letting go of the mouse works everywhere, and is how text is selected
+	// out of the panes athq does not select in itself.
+	if key.Matches(msg, tuiKeys.ToggleMouse) {
+		return m.toggleMouse(), nil
+	}
+
 	// In the editor tab completes the name being typed instead of moving on;
 	// shift+tab and esc still leave the pane. Any other key ends a run of
-	// completions.
-	if m.focus == paneEditor && key.Matches(msg, tuiKeys.Complete) {
+	// completions. In vim's normal mode nothing is being typed, so tab moves
+	// between the panes there like everywhere else.
+	if m.focus == paneEditor && m.editorTyping() && key.Matches(msg, tuiKeys.Complete) {
 		return m.completeWord()
 	}
 	m.completion = tuiCompletion{}
@@ -425,12 +455,7 @@ func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 
 	if m.focus == paneEditor {
-		if key.Matches(msg, tuiKeys.Escape) {
-			return m.setFocus(paneCatalog)
-		}
-		var cmd tea.Cmd
-		m.editor, cmd = m.editor.Update(msg)
-		return m, cmd
+		return m.handleEditorKey(msg)
 	}
 
 	if key.Matches(msg, tuiKeys.Quit) {
@@ -460,9 +485,121 @@ func (m tuiModel) handlePaste(msg tea.PasteMsg) (tea.Model, tea.Cmd) {
 	if m.mode != modeNormal || m.focus != paneEditor {
 		return m, nil
 	}
+	return m.insertPastedText(msg.Content), nil
+}
+
+// insertPastedText puts pasted text into the editor. While inserting it goes
+// in at the cursor; in vim's normal mode it is put beside it, the way p does,
+// since there is no insertion point there.
+func (m tuiModel) insertPastedText(text string) tuiModel {
+	if text == "" {
+		return m
+	}
+	if m.vim.on && m.vim.mode != vimInsert {
+		return m.vimPut(text, strings.HasSuffix(text, "\n"), true, 1)
+	}
+	m.editor, _ = m.editor.Update(tea.PasteMsg{Content: text})
+	m.vimSyncFromEditor()
+	return m
+}
+
+// editorTyping reports whether keys typed in the editor are text rather than
+// commands, which is always so unless vim mode is waiting in normal or visual
+// mode.
+func (m tuiModel) editorTyping() bool { return !m.vim.on || m.vim.mode == vimInsert }
+
+// handleEditorKey routes a key that landed in the query editor. Copying and
+// pasting are handled first because they mean the same thing in every mode;
+// the modal layer takes the rest unless the editor is inserting, where the
+// text area's own bindings (ctrl+a, ctrl+k, alt+f …) still apply.
+func (m tuiModel) handleEditorKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, tuiKeys.Copy):
+		return m.copySelection()
+	case key.Matches(msg, tuiKeys.Paste):
+		return m, pasteFromClipboardCmd()
+	}
+
+	if m.vim.on && m.vim.mode != vimInsert {
+		return m.vimKey(msg)
+	}
+
+	if key.Matches(msg, tuiKeys.Escape) {
+		if m.vim.on {
+			// esc stops the typing; a second one leaves the pane.
+			m.vimLeaveInsert()
+			return m, nil
+		}
+		return m.setFocus(paneCatalog)
+	}
+
 	var cmd tea.Cmd
 	m.editor, cmd = m.editor.Update(msg)
+	m.vimSyncFromEditor()
 	return m, cmd
+}
+
+// copySelection puts whatever is selected in the editor on the system
+// clipboard. In visual mode it is y, so that the register is filled as well.
+func (m tuiModel) copySelection() (tea.Model, tea.Cmd) {
+	if m.vim.on && m.vim.mode.visual() {
+		return m.vimKey(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	}
+	text := m.editor.SelectedText()
+	if text == "" {
+		m.status = "nothing is selected"
+		m.statusErr = false
+		return m, nil
+	}
+	return m, copySelectionCmd(text)
+}
+
+// showCopied reports what copying did. A helper program that failed is not an
+// error as such: the same text went out as an OSC 52 sequence, which the
+// terminal may well have acted on.
+func (m tuiModel) showCopied(msg msgTUICopied) tuiModel {
+	m.statusErr = false
+	m.status = fmt.Sprintf("copied %s", plural(msg.runes, "character"))
+	if msg.err != nil {
+		m.status += fmt.Sprintf(" through the terminal (%s)", msg.err)
+	}
+	return m
+}
+
+// showPasted puts what the clipboard held into the editor.
+func (m tuiModel) showPasted(msg msgTUIPasted) (tea.Model, tea.Cmd) {
+	if msg.err != nil {
+		m.status = "cannot read the clipboard: " + msg.err.Error() +
+			"; the terminal's own paste (ctrl+shift+v, cmd+v) works without one"
+		m.statusErr = true
+		return m, nil
+	}
+	if m.mode != modeNormal || m.focus != paneEditor {
+		return m, nil
+	}
+	return m.insertPastedText(msg.text), nil
+}
+
+// toggleMouse hands the mouse to the terminal and back. While athq holds it,
+// selecting text with the pointer needs the terminal's own modifier (shift in
+// Windows Terminal and Ghostty, fn in Terminal.app), which is easy to forget.
+func (m tuiModel) toggleMouse() tuiModel {
+	m.mouseOff = !m.mouseOff
+	m.statusErr = false
+	if m.mouseOff {
+		m.status = "the mouse is the terminal's now: select and copy as usual, f2 takes it back"
+	} else {
+		m.status = "the mouse is athq's again"
+	}
+	return m
+}
+
+// plural is "1 character" or "2 characters".
+func plural(n int, noun string) string {
+	if n == 1 {
+		return fmt.Sprintf("%d %s", n, noun)
+	}
+	return fmt.Sprintf("%d %ss", n, noun)
 }
 
 // handleModeKey routes the keyboard to whatever prompt or overlay is open.
@@ -582,6 +719,13 @@ func (m tuiModel) setFocus(p tuiPane) (tea.Model, tea.Cmd) {
 	m.focus = p
 	m.completion = tuiCompletion{}
 	if p == paneEditor {
+		// The pane is entered in normal mode, the way vi opens a file.
+		if m.vim.on {
+			m.vim.mode = vimNormal
+			m.vim.clearPending()
+			m.editor.ClearSelection()
+			m.vimSyncFromEditor()
+		}
 		return m, m.editor.Focus()
 	}
 	m.editor.Blur()
@@ -617,6 +761,7 @@ func (m tuiModel) insertCurrentName() (tea.Model, tea.Cmd) {
 func (m tuiModel) insert(text string) (tea.Model, tea.Cmd) {
 	m.completion = tuiCompletion{}
 	m.editor.InsertString(text)
+	m.vimSyncFromEditor()
 	m.status = "inserted " + text
 	m.statusErr = false
 	return m, nil

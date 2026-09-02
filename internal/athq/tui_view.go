@@ -65,8 +65,12 @@ func (m tuiModel) View() tea.View {
 	var v tea.View
 	v.AltScreen = true
 	// Clicking a table or a column puts its name into the query, which saves
-	// walking there with tab and i.
+	// walking there with tab and i. f2 hands the mouse back to the terminal
+	// so its own selection works; see [tuiModel.toggleMouse].
 	v.MouseMode = tea.MouseModeCellMotion
+	if m.mouseOff {
+		v.MouseMode = tea.MouseModeNone
+	}
 
 	if !m.ready {
 		v.SetContent("\n  starting…\n")
@@ -92,12 +96,21 @@ func (m tuiModel) View() tea.View {
 	v.SetContent(lipgloss.JoinVertical(lipgloss.Left,
 		m.headerLine(),
 		top,
-		m.pane(m.focus == paneEditor, "query", m.editor.View(), m.width, m.editHeight),
+		m.pane(m.focus == paneEditor, m.editorTitle(), m.editor.View(), m.width, m.editHeight),
 		m.pane(m.focus == paneResult, m.resultTitle(), m.resultVP.View(), m.width, m.resHeight),
 		m.statusLine(),
 		m.helpLine(),
 	))
 	return v
+}
+
+// editorTitle names the editor pane, with the vim mode it is in when it has
+// the focus: which keys do what depends on it, so it has to be on screen.
+func (m tuiModel) editorTitle() string {
+	if !m.vim.on || m.focus != paneEditor {
+		return "query"
+	}
+	return "query — " + m.vim.mode.label()
 }
 
 // pane draws one bordered box with a title line inside it.
@@ -281,12 +294,25 @@ func (m tuiModel) helpLine() string {
 		hints = "tab pane · enter expand · i/click insert · r reload · ^r run · ^s save · ^w/^o saved query · q quit"
 	case m.focus == paneColumns:
 		hints = "tab pane · i/click insert · ←back · ^r run · ^s save · ^w/^o saved query · q quit"
+	case m.focus == paneEditor && m.vim.on && m.vim.mode.visual():
+		hints = "y copy · d delete · c change · V lines · esc normal · ^r run · ^c cancel/quit"
+	case m.focus == paneEditor && m.vim.on && m.vim.mode == vimNormal:
+		hints = "i insert · v visual · yy/dd/p copy/cut/paste · u undo · tab pane · esc leave editor · ^r run · ^s save · ^w/^o saved query"
 	case m.focus == paneEditor:
 		// q is a valid character to type here, so it cannot quit like it does
 		// elsewhere; ^c is the only way out without leaving the editor first.
-		hints = "tab complete · esc leave editor · shift+tab pane · ^r run · ^s save · ^w/^o saved query · ^c cancel/quit"
+		hints = "tab complete · esc " + m.escapeHint() + " · ^y copy · ^v paste · ^r run · ^s save · ^w/^o saved query · ^c cancel/quit"
 	default:
 		hints = "↑↓←→ scroll · tab pane · ^s save · ^w/^o saved query · q quit"
 	}
 	return styleTUIHelp.Render(truncatePad(hints, m.width-2))
+}
+
+// escapeHint says what esc does in the editor, which depends on whether the
+// modal layer is there to catch it first.
+func (m tuiModel) escapeHint() string {
+	if m.vim.on {
+		return "normal mode"
+	}
+	return "leave editor"
 }

@@ -21,6 +21,7 @@ func newTestTUI(t *testing.T, width, height int) tuiModel {
 	t.Setenv(envDatabase, "")
 	t.Setenv(envWorkGroup, testWorkGroup)
 	t.Setenv(envOutputLocation, "")
+	t.Setenv(envVim, "") // the default, whatever the developer's environment says
 	opts.database = ""
 	opts.workGroup = ""
 	opts.outputLocation = ""
@@ -55,6 +56,16 @@ func loadedTUI(t *testing.T) tuiModel {
 	m.databases[0].expanded = true
 	m.databases[0].loaded = true
 	m.rows = catalogRows(m.databases)
+	return m
+}
+
+// insertingEditor puts the focus in the editor and starts inserting. Vim mode
+// is on by default, so a test about typing has to say so; see tui_vim_test.go
+// for the modal side.
+func insertingEditor(m tuiModel) tuiModel {
+	m.focus = paneEditor
+	m.vim.mode = vimInsert
+	m.editor.Focus()
 	return m
 }
 
@@ -260,9 +271,7 @@ func TestShiftTabLeavesTheEditor(t *testing.T) {
 }
 
 func TestKeysGoToTheEditorWhenItIsFocused(t *testing.T) {
-	m := loadedTUI(t)
-	m.focus = paneEditor
-	m.editor.Focus()
+	m := insertingEditor(loadedTUI(t))
 
 	for _, s := range []string{"q", "i"} {
 		m = pressKey(t, m, s)
@@ -314,9 +323,7 @@ func TestCtrlCCancelsARunningQueryInsteadOfQuitting(t *testing.T) {
 }
 
 func TestShiftRightSelectsTextInTheEditor(t *testing.T) {
-	m := loadedTUI(t)
-	m.focus = paneEditor
-	m.editor.Focus()
+	m := insertingEditor(loadedTUI(t))
 	m.editor.SetValue("SELECT 1")
 	m.editor.MoveToBegin() // SetValue leaves the cursor at the end, after the insert
 
@@ -338,9 +345,7 @@ func TestShiftRightSelectsTextInTheEditor(t *testing.T) {
 // non-nil command shows the key reached the editor's own binding instead of
 // being swallowed by athq's global key handling first.
 func TestCtrlShiftCIsRoutedToTheEditorForCopying(t *testing.T) {
-	m := loadedTUI(t)
-	m.focus = paneEditor
-	m.editor.Focus()
+	m := insertingEditor(loadedTUI(t))
 	m.editor.SetValue("SELECT 1")
 	m.editor.MoveToBegin()
 	for range len("SELECT") {
@@ -358,9 +363,7 @@ func TestCtrlShiftCIsRoutedToTheEditorForCopying(t *testing.T) {
 }
 
 func TestCtrlVIsRoutedToTheEditorForPasting(t *testing.T) {
-	m := loadedTUI(t)
-	m.focus = paneEditor
-	m.editor.Focus()
+	m := insertingEditor(loadedTUI(t))
 
 	_, cmd := m.Update(tea.KeyPressMsg{Code: 'v', Mod: tea.ModCtrl})
 	if cmd == nil {
@@ -372,9 +375,7 @@ func TestCtrlVIsRoutedToTheEditorForPasting(t *testing.T) {
 // shortcut, e.g. cmd+v on a Mac, rather than a literal ctrl+v key press, so
 // this needs its own handling in addition to the ctrl+v binding above.
 func TestPasteInsertsIntoTheFocusedEditor(t *testing.T) {
-	m := loadedTUI(t)
-	m.focus = paneEditor
-	m.editor.Focus()
+	m := insertingEditor(loadedTUI(t))
 
 	next, _ := m.Update(tea.PasteMsg{Content: "SELECT 1"})
 	m = next.(tuiModel)
