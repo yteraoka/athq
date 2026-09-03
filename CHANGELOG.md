@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.0.1](https://github.com/yteraoka/athq/compare/v1.0.0...v1.0.1) - 2026-09-03
+
+- クエリエディタから ctrl+e で $EDITOR を呼び出して編集できるようにする by @yteraoka in https://github.com/yteraoka/athq/pull/50
+
 ## [v0.5.2](https://github.com/yteraoka/athq/compare/v0.5.1...v0.5.2) - 2026-09-02
 
 - エディタペインのコピー＆ペーストを直し、vim キーバインドを入れる by @yteraoka in https://github.com/yteraoka/athq/pull/47
