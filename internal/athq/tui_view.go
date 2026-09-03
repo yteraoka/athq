@@ -291,19 +291,19 @@ func (m tuiModel) helpLine() string {
 	case m.mode == modeQueryDesc:
 		hints = "enter save the query · esc cancel"
 	case m.focus == paneCatalog:
-		hints = "tab pane · enter expand · i/click insert · r reload · ^r run · ^s save · ^w/^o saved query · q quit"
+		hints = "tab pane · enter expand · i/click insert · r reload · ^r run · ^s save · ^w/^o saved query · ^e $EDITOR · q quit"
 	case m.focus == paneColumns:
-		hints = "tab pane · i/click insert · ←back · ^r run · ^s save · ^w/^o saved query · q quit"
+		hints = "tab pane · i/click insert · ←back · ^r run · ^s save · ^w/^o saved query · ^e $EDITOR · q quit"
 	case m.focus == paneEditor && m.vim.on && m.vim.mode.visual():
 		hints = "y copy · d delete · c change · V lines · esc normal · ^r run · ^c cancel/quit"
 	case m.focus == paneEditor && m.vim.on && m.vim.mode == vimNormal:
-		hints = "i insert · v visual · yy/dd/p copy/cut/paste · u undo · tab pane · esc leave editor · ^r run · ^s save · ^w/^o saved query"
+		hints = "i insert · v visual · yy/dd/p copy/cut/paste · u undo · tab pane · esc leave editor · ^r run · ^s save · ^w/^o saved query · ^e $EDITOR"
 	case m.focus == paneEditor:
 		// q is a valid character to type here, so it cannot quit like it does
 		// elsewhere; ^c is the only way out without leaving the editor first.
-		hints = "tab complete · esc " + m.escapeHint() + " · ^y copy · ^v paste · ^r run · ^s save · ^w/^o saved query · ^c cancel/quit"
+		hints = "tab complete · esc " + m.escapeHint() + " · ^y copy · ^v paste · ^r run · ^s save · ^w/^o saved query · ^e $EDITOR · ^c cancel/quit"
 	default:
-		hints = "↑↓←→ scroll · tab pane · ^s save · ^w/^o saved query · q quit"
+		hints = "↑↓←→ scroll · tab pane · ^s save · ^w/^o saved query · ^e $EDITOR · q quit"
 	}
 	return styleTUIHelp.Render(truncatePad(hints, m.width-2))
 }

@@ -3,6 +3,7 @@ package athq
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -137,5 +138,24 @@ func TestEditorCommandFallsBackToVi(t *testing.T) {
 	got := editorCommand()
 	if len(got) != 1 || got[0] != "vi" {
 		t.Errorf("got = %v, want [vi]", got)
+	}
+}
+
+func TestTempQueryFileHoldsTheGivenContent(t *testing.T) {
+	path, err := tempQueryFile("SELECT 1")
+	if err != nil {
+		t.Fatalf("got error %v, want none", err)
+	}
+	defer func() { _ = os.Remove(path) }()
+
+	if !strings.HasSuffix(path, ".sql") {
+		t.Errorf("path: got = %q, want a .sql file, for the editor's own syntax highlighting", path)
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != "SELECT 1" {
+		t.Errorf("content: got = %q, want %q", string(b), "SELECT 1")
 	}
 }

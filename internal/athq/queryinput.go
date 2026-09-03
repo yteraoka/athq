@@ -75,20 +75,11 @@ func queryFromFile(path string) (string, error) {
 // queryFromEditor opens $EDITOR on a temporary file and runs whatever was
 // saved.
 func queryFromEditor() (string, error) {
-	f, err := os.CreateTemp("", "athq-*.sql")
+	name, err := tempQueryFile(editorTemplate)
 	if err != nil {
-		return "", fmt.Errorf("failed to create a temporary file: %w", err)
+		return "", err
 	}
-	name := f.Name()
 	defer func() { _ = os.Remove(name) }()
-
-	if _, err := f.WriteString(editorTemplate); err != nil {
-		_ = f.Close()
-		return "", fmt.Errorf("failed to write %s: %w", name, err)
-	}
-	if err := f.Close(); err != nil {
-		return "", fmt.Errorf("failed to write %s: %w", name, err)
-	}
 
 	editor := editorCommand()
 	cmd := exec.Command(editor[0], append(editor[1:], name)...) // #nosec G204 -- the editor comes from the user's own environment
@@ -102,6 +93,28 @@ func queryFromEditor() (string, error) {
 		return "", fmt.Errorf("failed to read %s: %w", name, err)
 	}
 	return checkQuery(string(b))
+}
+
+// tempQueryFile writes content to a new .sql file in the temporary directory
+// and returns its path, for an editor to be pointed at. The caller removes it
+// once the editor session is done.
+func tempQueryFile(content string) (string, error) {
+	f, err := os.CreateTemp("", "athq-*.sql")
+	if err != nil {
+		return "", fmt.Errorf("failed to create a temporary file: %w", err)
+	}
+	name := f.Name()
+
+	if _, err := f.WriteString(content); err != nil {
+		_ = f.Close()
+		_ = os.Remove(name)
+		return "", fmt.Errorf("failed to write %s: %w", name, err)
+	}
+	if err := f.Close(); err != nil {
+		_ = os.Remove(name)
+		return "", fmt.Errorf("failed to write %s: %w", name, err)
+	}
+	return name, nil
 }
 
 func editorCommand() []string {
