@@ -3,6 +3,8 @@ package athq
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -319,6 +321,38 @@ func TestCtrlCCancelsARunningQueryInsteadOfQuitting(t *testing.T) {
 	}
 	if !strings.Contains(m.status, "cancel") {
 		t.Errorf("status: got %q, want it to mention cancelling", m.status)
+	}
+}
+
+// ctrl+e always acts on the query in the editor, like ctrl+r does, so it has
+// to work from whichever pane the focus is actually in.
+func TestCtrlEOpensTheExternalEditorFromAnyPane(t *testing.T) {
+	before, _ := filepath.Glob(filepath.Join(os.TempDir(), "athq-*.sql"))
+
+	m := loadedTUI(t)
+	m.focus = paneCatalog
+
+	next, cmd := m.Update(tea.KeyPressMsg{Code: 'e', Mod: tea.ModCtrl})
+	m = next.(tuiModel)
+
+	if cmd == nil {
+		t.Fatal("got no command, want the $EDITOR process to have been started")
+	}
+	if m.statusErr {
+		t.Errorf("status: got an error (%q), want the temporary file to have been written", m.status)
+	}
+
+	// Nothing about this path runs the process that would normally remove the
+	// temporary file it was pointed at, so clean up the one it just made.
+	after, _ := filepath.Glob(filepath.Join(os.TempDir(), "athq-*.sql"))
+	seen := make(map[string]bool, len(before))
+	for _, p := range before {
+		seen[p] = true
+	}
+	for _, p := range after {
+		if !seen[p] {
+			_ = os.Remove(p)
+		}
 	}
 }
 

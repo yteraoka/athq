@@ -5,25 +5,26 @@ import "charm.land/bubbles/v2/key"
 // tuiKeyMap holds the bindings that work outside the editor. The editor keeps
 // its own bindings; only the ones listed here are taken away from it.
 type tuiKeyMap struct {
-	Up        key.Binding
-	Down      key.Binding
-	PageUp    key.Binding
-	PageDown  key.Binding
-	Left      key.Binding
-	Right     key.Binding
-	Toggle    key.Binding
-	Insert    key.Binding
-	NextPane  key.Binding
-	PrevPane  key.Binding
-	Complete  key.Binding
-	Run       key.Binding
-	Save      key.Binding
-	SaveQuery key.Binding
-	OpenQuery key.Binding
-	Reload    key.Binding
-	Escape    key.Binding
-	Quit      key.Binding
-	Cancel    key.Binding
+	Up           key.Binding
+	Down         key.Binding
+	PageUp       key.Binding
+	PageDown     key.Binding
+	Left         key.Binding
+	Right        key.Binding
+	Toggle       key.Binding
+	Insert       key.Binding
+	NextPane     key.Binding
+	PrevPane     key.Binding
+	Complete     key.Binding
+	Run          key.Binding
+	Save         key.Binding
+	SaveQuery    key.Binding
+	OpenQuery    key.Binding
+	EditExternal key.Binding
+	Reload       key.Binding
+	Escape       key.Binding
+	Quit         key.Binding
+	Cancel       key.Binding
 
 	Copy        key.Binding
 	Paste       key.Binding
@@ -95,6 +96,14 @@ var tuiKeys = tuiKeyMap{
 	OpenQuery: key.NewBinding(
 		key.WithKeys("ctrl+o"),
 		key.WithHelp("^o", "open a saved query"),
+	),
+	// ^e hands the query to $EDITOR and reloads it once the process exits, for
+	// whatever the built-in vim keys do not cover. It takes ctrl+e away from
+	// the plain text area's own binding for that combination (move to the end
+	// of the line), which the end key still does.
+	EditExternal: key.NewBinding(
+		key.WithKeys("ctrl+e"),
+		key.WithHelp("^e", "edit in $EDITOR"),
 	),
 	Reload: key.NewBinding(
 		key.WithKeys("r"),

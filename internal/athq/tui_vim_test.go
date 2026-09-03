@@ -2,6 +2,8 @@ package athq
 
 import (
 	"math/rand"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -339,6 +341,88 @@ func TestVimCanBeTurnedOff(t *testing.T) {
 	}
 	if m2.vim.mode != vimInsert {
 		t.Errorf("mode: got = %v, want the plain text area", m2.vim.mode.label())
+	}
+}
+
+// writeTempFile is a small helper for the ctrl+e tests below: they feed
+// [tuiModel.finishExternalEdit] the message it would get once $EDITOR exits,
+// without actually running one.
+func writeTempFile(t *testing.T, content string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "q.sql")
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestExternalEditReplacesTheBufferAndReturnsToNormalMode(t *testing.T) {
+	m := vimTUI(t, "SELECT 1")
+	m = vimType(t, m, "G") // away from the top left, so landing there is visible
+
+	path := writeTempFile(t, "SELECT 2\n")
+	next, _ := m.Update(msgTUIExternalEdited{path: path})
+	m = next.(tuiModel)
+
+	wantValue(t, m, "SELECT 2")
+	if m.vim.mode != vimNormal {
+		t.Errorf("mode: got = %v, want normal, the way vi opens a file", m.vim.mode.label())
+	}
+	wantCursor(t, m, 0, 0)
+	if m.focus != paneEditor {
+		t.Errorf("focus: got = %v, want the editor", m.focus)
+	}
+	if m.statusErr {
+		t.Errorf("status: got an error (%q), want none", m.status)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Error("the temporary file should have been removed")
+	}
+
+	// The reload is a change like any other: u takes it back.
+	m = vimType(t, m, "u")
+	wantValue(t, m, "SELECT 1")
+}
+
+func TestExternalEditFailureKeepsTheBuffer(t *testing.T) {
+	m := vimTUI(t, "SELECT 1")
+	next, _ := m.Update(msgTUIExternalEdited{path: writeTempFile(t, "SELECT 2"), err: errTest})
+	m = next.(tuiModel)
+
+	wantValue(t, m, "SELECT 1")
+	if !m.statusErr || !strings.Contains(m.status, errTest.Error()) {
+		t.Errorf("status: got = %q (err=%v), want the editor's own failure", m.status, m.statusErr)
+	}
+}
+
+func TestExternalEditReadFailureKeepsTheBuffer(t *testing.T) {
+	m := vimTUI(t, "SELECT 1")
+	missing := filepath.Join(t.TempDir(), "gone.sql")
+
+	next, _ := m.Update(msgTUIExternalEdited{path: missing})
+	m = next.(tuiModel)
+
+	wantValue(t, m, "SELECT 1")
+	if !m.statusErr {
+		t.Error("status: got no error, want one: the file the editor was pointed at is gone")
+	}
+}
+
+// The plain text area has no undo of its own, so ctrl+e there just has to
+// replace the value without tripping over the vim-only bookkeeping.
+func TestExternalEditWithVimOff(t *testing.T) {
+	t.Setenv(envVim, "0")
+	m := newTestTUI(t, 100, 40)
+	m.editor.SetValue("SELECT 1")
+
+	next, _ := m.Update(msgTUIExternalEdited{path: writeTempFile(t, "SELECT 2")})
+	m = next.(tuiModel)
+
+	if got := m.editor.Value(); got != "SELECT 2" {
+		t.Errorf("got = %q, want the reloaded query", got)
+	}
+	if m.focus != paneEditor {
+		t.Errorf("focus: got = %v, want the editor", m.focus)
 	}
 }
 

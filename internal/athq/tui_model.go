@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -53,6 +55,14 @@ type msgTUIQueryDone struct {
 }
 
 type msgTUISaved struct {
+	path string
+	err  error
+}
+
+// msgTUIExternalEdited is what ctrl+e resolves to once $EDITOR exits: path is
+// the temporary file it was pointed at, which holds the new query unless err
+// says the process itself failed.
+type msgTUIExternalEdited struct {
 	path string
 	err  error
 }
@@ -285,6 +295,9 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.statusErr = false
 		return m, nil
 
+	case msgTUIExternalEdited:
+		return m.finishExternalEdit(msg)
+
 	case msgTUIQuerySaved:
 		if msg.err != nil {
 			return m.fail(msg.err), nil
@@ -452,6 +465,8 @@ func (m tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m.startSaveQuery()
 	case key.Matches(msg, tuiKeys.OpenQuery):
 		return m.startOpenQuery()
+	case key.Matches(msg, tuiKeys.EditExternal):
+		return m.startExternalEdit()
 	}
 
 	if m.focus == paneEditor {
@@ -792,6 +807,48 @@ func (m tuiModel) startSave() (tea.Model, tea.Cmd) {
 	m.mode = modeSaveResult
 	m.saveIn.SetValue("")
 	return m, m.saveIn.Focus()
+}
+
+// startExternalEdit hands the query in the editor to $EDITOR, for whatever
+// the built-in vim keys cannot do. The terminal is let go for the editor's
+// own screen the way [tea.ExecProcess] does it, and [tuiModel.finishExternalEdit]
+// picks the result back up once the process exits. Available from any pane,
+// like ctrl+r, since it always acts on the query in the editor rather than
+// whichever pane has the focus.
+func (m tuiModel) startExternalEdit() (tea.Model, tea.Cmd) {
+	path, err := tempQueryFile(m.editor.Value())
+	if err != nil {
+		return m.fail(err), nil
+	}
+	editor := editorCommand()
+	cmd := exec.Command(editor[0], append(editor[1:], path)...) // #nosec G204 -- the editor comes from the user's own environment
+	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+		return msgTUIExternalEdited{path: path, err: err}
+	})
+}
+
+// finishExternalEdit loads what $EDITOR saved back into the buffer, in normal
+// mode with the cursor at the top left, the way vi opens a file. A change
+// that came in this way is still one keypress from undone: the buffer before
+// it is pushed like any other command that replaces it.
+func (m tuiModel) finishExternalEdit(msg msgTUIExternalEdited) (tea.Model, tea.Cmd) {
+	defer func() { _ = os.Remove(msg.path) }()
+	if msg.err != nil {
+		return m.fail(fmt.Errorf("the editor failed: %w", msg.err)), nil
+	}
+	b, err := os.ReadFile(msg.path)
+	if err != nil {
+		return m.fail(err), nil
+	}
+
+	if m.vim.on {
+		m.vimPushUndo()
+	}
+	m.editor.SetValue(strings.TrimSuffix(string(b), "\n"))
+	m.editor.MoveToBegin()
+	m.status = "updated the query from the editor"
+	m.statusErr = false
+	return m.setFocus(paneEditor)
 }
 
 func (m tuiModel) currentRow() (catalogRow, bool) {

@@ -159,6 +159,7 @@ value format can only be told from the real partition values.
 | `ctrl+s` | save the whole result; the format follows the extension typed |
 | `ctrl+w` | save the query in the editor under a name and a description |
 | `ctrl+o` | open a saved query |
+| `ctrl+e` | edit the query in `$EDITOR`, replacing it with what is saved |
 | `esc` | leave the editor (in vim mode, stop inserting first) |
 | `tab` (while typing in the editor) | complete the name before the cursor |
 | `click`+drag (in the editor) | select text |
@@ -210,6 +211,18 @@ which are also what insert mode still has.
 one change at a time, up to 200 of them. Tab completion belongs to insert
 mode, where a name is being typed; in normal mode `tab` moves between the
 panes like everywhere else.
+
+#### Falling back to `$EDITOR`
+
+This is not a full vim, so anything past the table above — search, marks,
+macros, `:` commands — is missing on purpose. `ctrl+e` is the way out: it
+writes the query to a temporary `.sql` file, suspends athq for `$EDITOR` (the
+same resolution as `-e`/`--editor`: `ATHQ_EDITOR`, then `$VISUAL`, then
+`$EDITOR`, then `vi`) and, once it exits, reloads whatever was saved and
+returns to the TUI in normal mode with the cursor at the top left, the way vi
+opens a file. It works from any pane, like `ctrl+r`, and the reload is a
+change like any other — `u` undoes it in vim mode. Exiting the editor with a
+failure (`:cq` in vim) leaves the query untouched.
 
 #### Copying and pasting
 
