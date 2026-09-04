@@ -65,7 +65,7 @@ Everything else is optional:
 | `ATHQ_EDITOR` | – | `$VISUAL`, `$EDITOR`, then `vi` |
 | `ATHQ_HISTORY_FILE` | – | `<user cache dir>/athq/history.jsonl` |
 | `ATHQ_SAVED_QUERIES_FILE` | – | `~/.config/athq/queries.jsonl` |
-| `ATHQ_VIM` | `--vim` | `1` (vi keys in the interactive editor) |
+| `ATHQ_VIM` | `--vim` | `0` (plain emacs style keys; `1` switches the interactive editor to vi keys) |
 
 A flag beats the environment variable, which beats the default.
 
@@ -187,16 +187,17 @@ selects it and clicking the selected table inserts `database.table`, and
 clicking a column inserts its name. Clicking the editor or the result moves the
 focus there, and the wheel scrolls whatever the pointer is over.
 
-#### The query editor is modal
+#### Vim style modal editing (opt-in)
 
-The editor uses vi keys: it starts in **normal** mode, where the keys are
-commands, and `i` (or `a`, `A`, `I`, `o`, `O`, `c`, `s`) starts **inserting**.
-`esc` stops inserting; a second `esc` leaves the pane. The pane title says
-which mode it is in — `query — NORMAL`, `query — INSERT`, `query — VISUAL`
-— and the cursor stands still while commanding and blinks while typing.
-`--vim=false` or `ATHQ_VIM=0` turns all of it off and leaves the plain text
-editor of before, with its emacs style keys (`ctrl+a`, `ctrl+k`, `alt+f`, …),
-which are also what insert mode still has.
+By default the editor is a plain text area with emacs style keys (`ctrl+a`,
+`ctrl+k`, `alt+f`, …) — the usual choice now that `ctrl+e` can hand anything
+bigger to `$EDITOR`. `--vim` or `ATHQ_VIM=1` switches it to vi keys instead:
+it starts in **normal** mode, where the keys are commands, and `i` (or `a`,
+`A`, `I`, `o`, `O`, `c`, `s`) starts **inserting**. `esc` stops inserting; a
+second `esc` leaves the pane. The pane title says which mode it is in —
+`query — NORMAL`, `query — INSERT`, `query — VISUAL` — and the cursor stands
+still while commanding and blinks while typing. Insert mode still has the
+emacs style keys as well.
 
 | | |
 | --- | --- |

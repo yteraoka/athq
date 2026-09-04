@@ -10,18 +10,17 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-// vimTUI is a loaded model with the query in the editor, in normal mode and
-// with the cursor at the top left, which is where vi opens a file.
+// vimTUI is a loaded model with vim mode turned on (it is opt-in, off by
+// default) and the query in the editor, in normal mode and with the cursor at
+// the top left, which is where vi opens a file.
 func vimTUI(t *testing.T, sql string) tuiModel {
 	t.Helper()
 	m := loadedTUI(t)
+	m.vim.on = true
 	m.focus = paneEditor
 	m.editor.Focus()
 	m.vim.mode = vimNormal
 	m.vimSetBuffer(vimLines(sql), vimPos{})
-	if !m.vim.on {
-		t.Fatal("setup: vim mode should be on by default")
-	}
 	return m
 }
 
@@ -331,8 +330,32 @@ func TestVimModeIsShownInThePaneTitle(t *testing.T) {
 	}
 }
 
+// Vim mode is opt-in: a fresh install gets the plain text area, since ctrl+e
+// can now hand anything bigger to $EDITOR.
+func TestVimIsOffByDefault(t *testing.T) {
+	m := newTestTUI(t, 100, 40)
+	m2 := newTUIModel(m.ctx, nil, "", 100)
+	if m2.vim.on {
+		t.Error("got vim mode on, want it off until asked for")
+	}
+	if m2.vim.mode != vimInsert {
+		t.Errorf("mode: got = %v, want the plain text area", m2.vim.mode.label())
+	}
+}
+
+func TestVimCanBeTurnedOnByEnv(t *testing.T) {
+	m := newTestTUI(t, 100, 40)
+	t.Setenv(envVim, "1")
+	m2 := newTUIModel(m.ctx, nil, "", 100)
+	if !m2.vim.on {
+		t.Error("got vim mode off, want ATHQ_VIM=1 to have turned it on")
+	}
+	if m2.vim.mode != vimNormal {
+		t.Errorf("mode: got = %v, want normal mode", m2.vim.mode.label())
+	}
+}
+
 func TestVimCanBeTurnedOff(t *testing.T) {
-	t.Setenv(envVim, "0")
 	m := newTestTUI(t, 100, 40)
 	t.Setenv(envVim, "0")
 	m2 := newTUIModel(m.ctx, nil, "", 100)
