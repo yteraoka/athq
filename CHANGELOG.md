@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.1.1](https://github.com/yteraoka/athq/compare/v1.1.0...v1.1.1) - 2026-09-04
+
+- Update Songmu/tagpr action to v1.20.3 by @renovate[bot] in https://github.com/yteraoka/athq/pull/52
+- Make vim style modal editing opt-in by @yteraoka in https://github.com/yteraoka/athq/pull/54
+
 ## [v1.0.1](https://github.com/yteraoka/athq/compare/v1.0.0...v1.0.1) - 2026-09-03
 
 - クエリエディタから ctrl+e で $EDITOR を呼び出して編集できるようにする by @yteraoka in https://github.com/yteraoka/athq/pull/50
