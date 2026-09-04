@@ -107,7 +107,7 @@ func init() {
 	pf.StringVar(&opts.catalog, "catalog", "", "data catalog name (env "+envCatalog+", default "+defaultCatalog+")")
 	pf.StringVar(&opts.region, "region", "", "AWS region (default: the usual AWS resolution)")
 	pf.StringVar(&opts.profile, "profile", "", "AWS shared config profile")
-	pf.BoolVar(&opts.vim, "vim", true, "vi style modal editing in the interactive query editor (env "+envVim+")")
+	pf.BoolVar(&opts.vim, "vim", false, "vi style modal editing in the interactive query editor (env "+envVim+")")
 	vimFlag = pf.Lookup("vim")
 
 	// Local (not persistent) so it does not collide with query's own -f/--file.
@@ -165,18 +165,20 @@ func requireDatabase() (string, error) {
 	return db, nil
 }
 
-// vimEnabled says whether the interactive editor is modal. It follows the
-// same flag > env > default order as the options above, which resolveOption
-// cannot do for a boolean: --vim=false and ATHQ_VIM=0 both look like the zero
-// value, and only the flag's own Changed tells one from a default.
+// vimEnabled says whether the interactive editor is modal. Vi style keys are
+// opt-in, now that ctrl+e can hand anything bigger to $EDITOR; the plain text
+// area is what a fresh install gets. It follows the same flag > env > default
+// order as the options above, which resolveOption cannot do for a boolean:
+// whichever value matches the flag's default also looks like the flag being
+// left untouched, and only the flag's own Changed tells one from the other.
 func vimEnabled() bool {
 	if vimFlag != nil && vimFlag.Changed {
 		return opts.vim
 	}
 	switch strings.ToLower(strings.TrimSpace(os.Getenv(envVim))) {
-	case "0", "false", "no", "off":
-		return false
-	default:
+	case "1", "true", "yes", "on":
 		return true
+	default:
+		return false
 	}
 }

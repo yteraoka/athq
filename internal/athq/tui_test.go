@@ -62,8 +62,9 @@ func loadedTUI(t *testing.T) tuiModel {
 }
 
 // insertingEditor puts the focus in the editor and starts inserting. Vim mode
-// is on by default, so a test about typing has to say so; see tui_vim_test.go
-// for the modal side.
+// is off by default, but forcing insert mode here as well keeps typing tests
+// correct even for the ones that turn it on; see tui_vim_test.go for the
+// modal side.
 func insertingEditor(m tuiModel) tuiModel {
 	m.focus = paneEditor
 	m.vim.mode = vimInsert

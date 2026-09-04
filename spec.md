@@ -13,8 +13,8 @@ Amazon Athena に簡単にクエリして結果を確認するためのコマン
 - `ATHQ_HISTORY_FILE` (既定はユーザーキャッシュディレクトリの `athq/history.jsonl`)
 - `ATHQ_SAVED_QUERIES_FILE` (既定は `~/.config/athq/queries.jsonl`、
   `XDG_CONFIG_HOME` が設定されていればその下の `athq/queries.jsonl`)
-- `ATHQ_VIM` (`--vim`、既定 on。`0`/`false`/`no`/`off` で TUI のエディタを
-  素の textarea に戻す)
+- `ATHQ_VIM` (`--vim`、既定 off (TUI のエディタは素の textarea)。
+  `1`/`true`/`yes`/`on` で vi キーバインドにする)
 
 フラグ > 環境変数 > 既定値 の優先順で解決します。
 
@@ -116,14 +116,16 @@ table の定義を見ながらクエリを書くための画面を開きます�
   (Windows Terminal と Ghostty は `shift`、Terminal.app は `fn`) を押すか、
   `f2` でマウスを端末に返します (`f2` でまた取り戻します)。
 
-#### エディタのモード (vim キーバインド)
+#### エディタのモード (vim キーバインド、オプトイン)
 
-クエリエディタは vi と同じモード式です。normal モードで開き、`i` (や `a`
-`A` `I` `o` `O` `c` `s`) で insert に入り、`esc` で normal に戻ります。normal
-モードでの `esc` はペインから抜けます。どのモードかはペインのタイトル
-(`query — NORMAL` / `INSERT` / `VISUAL` / `V-LINE`) と、カーソルが点滅するか
-どうかで分かります。`--vim=false` (`ATHQ_VIM=0`) で無効にすると、これまでどおり
-の textarea (emacs 風のキー) になります。insert モードでもそのキーは使えます。
+既定ではエディタは emacs 風のキー (`ctrl+a`、`ctrl+k`、`alt+f` など) で操作する
+素の textarea です。`ctrl+e` で大きな編集を `$EDITOR` に任せられるので、これを
+既定の挙動としています。`--vim` (`ATHQ_VIM=1`) を指定すると vi と同じモード式に
+なります。normal モードで開き、`i` (や `a` `A` `I` `o` `O` `c` `s`) で insert に
+入り、`esc` で normal に戻ります。normal モードでの `esc` はペインから抜けます。
+どのモードかはペインのタイトル (`query — NORMAL` / `INSERT` / `VISUAL` /
+`V-LINE`) と、カーソルが点滅するかどうかで分かります。insert モードでも
+emacs 風のキーはそのまま使えます。
 
 | 分類 | キー |
 | --- | --- |
