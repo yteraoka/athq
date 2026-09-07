@@ -59,7 +59,7 @@ type msgTUISaved struct {
 	err  error
 }
 
-// msgTUIExternalEdited is what ctrl+e resolves to once $EDITOR exits: path is
+// msgTUIExternalEdited is what ctrl+l resolves to once $EDITOR exits: path is
 // the temporary file it was pointed at, which holds the new query unless err
 // says the process itself failed.
 type msgTUIExternalEdited struct {

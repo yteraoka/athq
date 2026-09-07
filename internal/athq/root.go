@@ -166,7 +166,7 @@ func requireDatabase() (string, error) {
 }
 
 // vimEnabled says whether the interactive editor is modal. Vi style keys are
-// opt-in, now that ctrl+e can hand anything bigger to $EDITOR; the plain text
+// opt-in, now that ctrl+l can hand anything bigger to $EDITOR; the plain text
 // area is what a fresh install gets. It follows the same flag > env > default
 // order as the options above, which resolveOption cannot do for a boolean:
 // whichever value matches the flag's default also looks like the flag being

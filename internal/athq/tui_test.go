@@ -325,15 +325,15 @@ func TestCtrlCCancelsARunningQueryInsteadOfQuitting(t *testing.T) {
 	}
 }
 
-// ctrl+e always acts on the query in the editor, like ctrl+r does, so it has
+// ctrl+l always acts on the query in the editor, like ctrl+r does, so it has
 // to work from whichever pane the focus is actually in.
-func TestCtrlEOpensTheExternalEditorFromAnyPane(t *testing.T) {
+func TestCtrlLOpensTheExternalEditorFromAnyPane(t *testing.T) {
 	before, _ := filepath.Glob(filepath.Join(os.TempDir(), "athq-*.sql"))
 
 	m := loadedTUI(t)
 	m.focus = paneCatalog
 
-	next, cmd := m.Update(tea.KeyPressMsg{Code: 'e', Mod: tea.ModCtrl})
+	next, cmd := m.Update(tea.KeyPressMsg{Code: 'l', Mod: tea.ModCtrl})
 	m = next.(tuiModel)
 
 	if cmd == nil {
