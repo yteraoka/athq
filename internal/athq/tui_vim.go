@@ -10,7 +10,7 @@ import (
 // what makes copying and pasting work the same everywhere — y and p never
 // have to travel through the terminal as a key combination it might keep for
 // itself — and it is opt-in, turned on with --vim or ATHQ_VIM=1. Left at its
-// default it stays the plain text area, since ctrl+e can hand anything bigger
+// default it stays the plain text area, since ctrl+l can hand anything bigger
 // to $EDITOR.
 //
 // The buffer itself still belongs to bubbles' textarea; this layer reads its

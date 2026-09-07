@@ -330,7 +330,7 @@ func TestVimModeIsShownInThePaneTitle(t *testing.T) {
 	}
 }
 
-// Vim mode is opt-in: a fresh install gets the plain text area, since ctrl+e
+// Vim mode is opt-in: a fresh install gets the plain text area, since ctrl+l
 // can now hand anything bigger to $EDITOR.
 func TestVimIsOffByDefault(t *testing.T) {
 	m := newTestTUI(t, 100, 40)
@@ -367,7 +367,7 @@ func TestVimCanBeTurnedOff(t *testing.T) {
 	}
 }
 
-// writeTempFile is a small helper for the ctrl+e tests below: they feed
+// writeTempFile is a small helper for the ctrl+l tests below: they feed
 // [tuiModel.finishExternalEdit] the message it would get once $EDITOR exits,
 // without actually running one.
 func writeTempFile(t *testing.T, content string) string {
@@ -431,7 +431,7 @@ func TestExternalEditReadFailureKeepsTheBuffer(t *testing.T) {
 	}
 }
 
-// The plain text area has no undo of its own, so ctrl+e there just has to
+// The plain text area has no undo of its own, so ctrl+l there just has to
 // replace the value without tripping over the vim-only bookkeeping.
 func TestExternalEditWithVimOff(t *testing.T) {
 	t.Setenv(envVim, "0")

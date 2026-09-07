@@ -159,7 +159,7 @@ value format can only be told from the real partition values.
 | `ctrl+s` | save the whole result; the format follows the extension typed |
 | `ctrl+w` | save the query in the editor under a name and a description |
 | `ctrl+o` | open a saved query |
-| `ctrl+e` | edit the query in `$EDITOR`, replacing it with what is saved |
+| `ctrl+l` | edit the query in `$EDITOR`, replacing it with what is saved |
 | `esc` | leave the editor (in vim mode, stop inserting first) |
 | `tab` (while typing in the editor) | complete the name before the cursor |
 | `click`+drag (in the editor) | select text |
@@ -190,7 +190,7 @@ focus there, and the wheel scrolls whatever the pointer is over.
 #### Vim style modal editing (opt-in)
 
 By default the editor is a plain text area with emacs style keys (`ctrl+a`,
-`ctrl+k`, `alt+f`, …) — the usual choice now that `ctrl+e` can hand anything
+`ctrl+k`, `alt+f`, …) — the usual choice now that `ctrl+l` can hand anything
 bigger to `$EDITOR`. `--vim` or `ATHQ_VIM=1` switches it to vi keys instead:
 it starts in **normal** mode, where the keys are commands, and `i` (or `a`,
 `A`, `I`, `o`, `O`, `c`, `s`) starts **inserting**. `esc` stops inserting; a
@@ -216,7 +216,7 @@ panes like everywhere else.
 #### Falling back to `$EDITOR`
 
 This is not a full vim, so anything past the table above — search, marks,
-macros, `:` commands — is missing on purpose. `ctrl+e` is the way out: it
+macros, `:` commands — is missing on purpose. `ctrl+l` is the way out: it
 writes the query to a temporary `.sql` file, suspends athq for `$EDITOR` (the
 same resolution as `-e`/`--editor`: `ATHQ_EDITOR`, then `$VISUAL`, then
 `$EDITOR`, then `vi`) and, once it exits, reloads whatever was saved and

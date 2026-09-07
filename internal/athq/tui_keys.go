@@ -97,13 +97,14 @@ var tuiKeys = tuiKeyMap{
 		key.WithKeys("ctrl+o"),
 		key.WithHelp("^o", "open a saved query"),
 	),
-	// ^e hands the query to $EDITOR and reloads it once the process exits, for
-	// whatever the built-in vim keys do not cover. It takes ctrl+e away from
-	// the plain text area's own binding for that combination (move to the end
-	// of the line), which the end key still does.
+	// ^l hands the query to $EDITOR and reloads it once the process exits, for
+	// whatever the built-in vim keys do not cover. It used to be ctrl+e, but
+	// that is also the plain text area's own binding for end of line — a key
+	// pressed constantly while editing — so it kept launching $EDITOR by
+	// accident instead. ctrl+l has no binding of its own anywhere in athq.
 	EditExternal: key.NewBinding(
-		key.WithKeys("ctrl+e"),
-		key.WithHelp("^e", "edit in $EDITOR"),
+		key.WithKeys("ctrl+l"),
+		key.WithHelp("^l", "edit in $EDITOR"),
 	),
 	Reload: key.NewBinding(
 		key.WithKeys("r"),
