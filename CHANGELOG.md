@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.3.1](https://github.com/yteraoka/athq/compare/v1.3.0...v1.3.1) - 2026-09-11
+
+- Update module golang.org/x/term to v0.46.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/59
+- Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.112.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/58
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/61
+- Update module github.com/mattn/go-runewidth to v0.0.30 by @renovate[bot] in https://github.com/yteraoka/athq/pull/62
+- Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.113.1 by @renovate[bot] in https://github.com/yteraoka/athq/pull/63
+
 ## [v1.2.1](https://github.com/yteraoka/athq/compare/v1.2.0...v1.2.1) - 2026-09-07
 
 - Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/55
