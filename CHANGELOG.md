@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.3.2](https://github.com/yteraoka/athq/compare/v1.3.1...v1.3.2) - 2026-09-14
+
+- Update module github.com/aws/aws-sdk-go-v2/config to v1.33.5 by @renovate[bot] in https://github.com/yteraoka/athq/pull/64
+
 ## [v1.3.1](https://github.com/yteraoka/athq/compare/v1.3.0...v1.3.1) - 2026-09-11
 
 - Update module golang.org/x/term to v0.46.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/59
