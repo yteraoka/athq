@@ -8,7 +8,7 @@ require (
 	charm.land/lipgloss/v2 v2.0.6
 	github.com/aws/aws-sdk-go-v2 v1.47.3
 	github.com/aws/aws-sdk-go-v2/config v1.33.9
-	github.com/aws/aws-sdk-go-v2/service/athena v1.66.4
+	github.com/aws/aws-sdk-go-v2/service/athena v1.66.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.3
 	github.com/mattn/go-runewidth v0.0.31
 	github.com/spf13/cobra v1.10.2
