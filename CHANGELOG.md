@@ -1,5 +1,40 @@
 # Changelog
 
+## [v1.3.2](https://github.com/yteraoka/athq/compare/v1.3.1...v1.3.2) - 2026-10-30
+
+- Update module github.com/aws/aws-sdk-go-v2/config to v1.33.5 by @renovate[bot] in https://github.com/yteraoka/athq/pull/64
+- Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.113.2 by @renovate[bot] in https://github.com/yteraoka/athq/pull/66
+- Update Songmu/tagpr action to v1.20.4 by @renovate[bot] in https://github.com/yteraoka/athq/pull/67
+- Update Songmu/tagpr action to v1.21.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/68
+- Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.113.3 by @renovate[bot] in https://github.com/yteraoka/athq/pull/69
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/70
+- Update module charm.land/bubbletea/v2 to v2.0.10 by @renovate[bot] in https://github.com/yteraoka/athq/pull/71
+- Update dependency golangci/golangci-lint to v2.14.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/72
+- Update Songmu/tagpr action to v1.21.1 by @renovate[bot] in https://github.com/yteraoka/athq/pull/73
+- Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.114.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/74
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/75
+- Update Songmu/tagpr action to v1.21.2 by @renovate[bot] in https://github.com/yteraoka/athq/pull/76
+- Update module github.com/mattn/go-runewidth to v0.0.31 by @renovate[bot] in https://github.com/yteraoka/athq/pull/77
+- Update dependency go to v1.27.2 by @renovate[bot] in https://github.com/yteraoka/athq/pull/78
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/79
+- Update module charm.land/bubbletea/v2 to v2.1.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/80
+- Update module golang.org/x/term to v0.47.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/81
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/82
+- Update actions/create-github-app-token action to v3.3.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/83
+- Update goreleaser/goreleaser-action action to v7.3.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/84
+- Update dependency golangci/golangci-lint to v2.15.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/86
+- Update Songmu/tagpr action to v1.21.3 by @renovate[bot] in https://github.com/yteraoka/athq/pull/85
+- Update dependency go to v1.27.3 by @renovate[bot] in https://github.com/yteraoka/athq/pull/87
+- Update module github.com/aws/aws-sdk-go-v2/service/athena to v1.66.5 by @renovate[bot] in https://github.com/yteraoka/athq/pull/88
+- Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.114.4 by @renovate[bot] in https://github.com/yteraoka/athq/pull/89
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/90
+- Update Songmu/tagpr action to v1.21.4 by @renovate[bot] in https://github.com/yteraoka/athq/pull/91
+- Update module github.com/aws/aws-sdk-go-v2/config to v1.33.11 by @renovate[bot] in https://github.com/yteraoka/athq/pull/92
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/93
+- Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.114.6 by @renovate[bot] in https://github.com/yteraoka/athq/pull/94
+- Update module charm.land/bubbletea/v2 to v2.1.1 by @renovate[bot] in https://github.com/yteraoka/athq/pull/95
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/96
+
 ## [v1.3.1](https://github.com/yteraoka/athq/compare/v1.3.0...v1.3.1) - 2026-09-11
 
 - Update module golang.org/x/term to v0.46.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/59
