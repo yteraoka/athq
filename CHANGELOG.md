@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.3.3](https://github.com/yteraoka/athq/compare/v1.3.2...v1.3.3) - 2026-11-04
+
+- Update Songmu/tagpr action to v1.22.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/97
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/99
+
 ## [v1.3.2](https://github.com/yteraoka/athq/compare/v1.3.1...v1.3.2) - 2026-10-30
 
 - Update module github.com/aws/aws-sdk-go-v2/config to v1.33.5 by @renovate[bot] in https://github.com/yteraoka/athq/pull/64
