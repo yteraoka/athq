@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.3.4](https://github.com/yteraoka/athq/compare/v1.3.3...v1.3.4) - 2026-11-06
+
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/100
+- Update module github.com/spf13/pflag to v1.1.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/102
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/103
+
 ## [v1.3.3](https://github.com/yteraoka/athq/compare/v1.3.2...v1.3.3) - 2026-11-04
 
 - Update Songmu/tagpr action to v1.22.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/97
