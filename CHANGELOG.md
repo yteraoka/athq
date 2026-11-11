@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.3.4](https://github.com/yteraoka/athq/compare/v1.3.3...v1.3.4) - 2026-11-11
+
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/100
+- Update module github.com/spf13/pflag to v1.1.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/102
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/103
+- Update module github.com/aws/aws-sdk-go-v2/config to v1.33.17 by @renovate[bot] in https://github.com/yteraoka/athq/pull/104
+- Update module charm.land/lipgloss/v2 to v2.1.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/105
+- Update module golang.org/x/term to v0.48.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/106
+- Update dependency go to v1.27.4 by @renovate[bot] in https://github.com/yteraoka/athq/pull/107
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/108
+
 ## [v1.3.3](https://github.com/yteraoka/athq/compare/v1.3.2...v1.3.3) - 2026-11-04
 
 - Update Songmu/tagpr action to v1.22.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/97
