@@ -116,6 +116,8 @@ github.com/aws/aws-sdk-go-v2/config v1.33.17 h1:5/Ahj9/efRCbHhZx0swd+rC2EqC8a2CE
 github.com/aws/aws-sdk-go-v2/config v1.33.17/go.mod h1:H0TQmatulB8yoemlckKQrPDn8aMHqpMyO5QCkYaQH0w=
 github.com/aws/aws-sdk-go-v2/config v1.33.18 h1:WC0C4jM/tewXG8DWXnoxXnusJPZTryPazqk2k/zgd2s=
 github.com/aws/aws-sdk-go-v2/config v1.33.18/go.mod h1:0kRpFgsnD59mC2bbbyOTVpaZ9RnXW/pFkqlfiwbgZaU=
+github.com/aws/aws-sdk-go-v2/config v1.33.19 h1:M0aPu5EdAMR6lGYN2GvM76WY0yqTyDi+gxV7s7Cdnr8=
+github.com/aws/aws-sdk-go-v2/config v1.33.19/go.mod h1:FSZkRx5fOaq82bZkGZrK+dXFgWvI4iIE0Y6ADmEKDag=
 github.com/aws/aws-sdk-go-v2/credentials v1.19.37 h1:FJ8Iz4/xISMB/rwLlgfWujfGDFWr0oneQgtA6KPcYLY=
 github.com/aws/aws-sdk-go-v2/credentials v1.19.37/go.mod h1:Q6pWOgVUp49x4g5QVi29wHofUoICnZ+Zq4jHbRN/7ec=
 github.com/aws/aws-sdk-go-v2/credentials v1.19.38 h1:Xf8j1+vzwPRCta9pFXjj0677BzXrRO2JbpAVNcdXnnI=
@@ -158,6 +160,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.20.17 h1:n76tvnpRJUk/jwDBijhnuwHSus6
 github.com/aws/aws-sdk-go-v2/credentials v1.20.17/go.mod h1:Hzlq1/HGNzNpw1qP+5otW3+EwXhMrQdRnBYLBeJKEBU=
 github.com/aws/aws-sdk-go-v2/credentials v1.21.0 h1:OViwhqeipkQzSHuO2eQDUCdLrI6r3nzGxFUyM8GqnCs=
 github.com/aws/aws-sdk-go-v2/credentials v1.21.0/go.mod h1:OffaVQod3fyZzhZJyPtw11WpHPF1uIHADc+/MYlXmbA=
+github.com/aws/aws-sdk-go-v2/credentials v1.21.1 h1:4iuMmYSa42WMeClXjzE+HoZIeBud6o/bd00BN6WM9H4=
+github.com/aws/aws-sdk-go-v2/credentials v1.21.1/go.mod h1:OffaVQod3fyZzhZJyPtw11WpHPF1uIHADc+/MYlXmbA=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.38 h1:Nqo2jU1wz5rnBM9XQyXfVD1RP8txkbP3EDx8hR/hbCE=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.38/go.mod h1:PzJFHhjR2vWFKHe8HmY5Lxhvwyxnr5MERtk0nDxWNbk=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.39 h1:9GLrXl8PKQ3+bMniXFg3vliMWJ+204bFcIvBCwJFglc=
@@ -318,6 +322,8 @@ github.com/aws/aws-sdk-go-v2/service/athena v1.67.0 h1:glIgmL6q0tMR3yTeQY/D7Q9hI
 github.com/aws/aws-sdk-go-v2/service/athena v1.67.0/go.mod h1:eGJa036cz0+rT9vjxEbiDlFMUmZ0XOnwt0sjokyIg/8=
 github.com/aws/aws-sdk-go-v2/service/athena v1.67.1 h1:MHojv+bZQ1+ZUeztGUOBKbrnmYkBn2wJXm2WOcNn1Nk=
 github.com/aws/aws-sdk-go-v2/service/athena v1.67.1/go.mod h1:NiQPosVHeirVl2IwekOMLfp3S3qBfqtJCik4GSlj2Eo=
+github.com/aws/aws-sdk-go-v2/service/athena v1.68.0 h1:niMDe0+wf11SUTo0Gss+lZfIQk3U0qj7ra6PA92WS2A=
+github.com/aws/aws-sdk-go-v2/service/athena v1.68.0/go.mod h1:NiQPosVHeirVl2IwekOMLfp3S3qBfqtJCik4GSlj2Eo=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.17 h1:OvYZOB3qA6zvfdRFiRFRzVSiElMYrz3GdntkXZxlp1o=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.17/go.mod h1:JgR/2Ew50ACfIWau1oeMRX59tMtC0kM+PYQGEaT04cY=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.18 h1:+fiwOxNdE8bOK3SoVTln8hwP+OCyArbi2/InIr/A9AU=
