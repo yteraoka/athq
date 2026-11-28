@@ -1,5 +1,29 @@
 # Changelog
 
+## [v1.3.4](https://github.com/yteraoka/athq/compare/v1.3.3...v1.3.4) - 2026-11-28
+
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/100
+- Update module github.com/spf13/pflag to v1.1.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/102
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/103
+- Update module github.com/aws/aws-sdk-go-v2/config to v1.33.17 by @renovate[bot] in https://github.com/yteraoka/athq/pull/104
+- Update module charm.land/lipgloss/v2 to v2.1.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/105
+- Update module golang.org/x/term to v0.48.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/106
+- Update dependency go to v1.27.4 by @renovate[bot] in https://github.com/yteraoka/athq/pull/107
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/108
+- Update module charm.land/lipgloss/v2 to v2.1.1 by @renovate[bot] in https://github.com/yteraoka/athq/pull/109
+- Update actions/setup-go action to v7.1.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/111
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/110
+- Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.115.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/112
+- Update module charm.land/bubbletea/v2 to v2.1.2 by @renovate[bot] in https://github.com/yteraoka/athq/pull/113
+- Update actions/create-github-app-token action to v3.4.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/114
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/115
+- Update module github.com/aws/aws-sdk-go-v2/config to v1.33.21 by @renovate[bot] in https://github.com/yteraoka/athq/pull/116
+- Update module charm.land/bubbles/v2 to v2.2.2 by @renovate[bot] in https://github.com/yteraoka/athq/pull/117
+- Update module charm.land/bubbletea/v2 to v2.1.3 by @renovate[bot] in https://github.com/yteraoka/athq/pull/118
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/119
+- Update module charm.land/bubbletea/v2 to v2.2.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/120
+- Update aws-sdk-go-v2 monorepo by @renovate[bot] in https://github.com/yteraoka/athq/pull/121
+
 ## [v1.3.3](https://github.com/yteraoka/athq/compare/v1.3.2...v1.3.3) - 2026-11-04
 
 - Update Songmu/tagpr action to v1.22.0 by @renovate[bot] in https://github.com/yteraoka/athq/pull/97
